@@ -1,0 +1,13 @@
+node_modules/
+dist/
+dist-ssr/
+*.log
+*.tsbuildinfo
+.DS_Store
+Thumbs.db
+Desktop.ini
+
+# Local secrets. Mode files stay in git: .env.example, .env.testnet, .env.local-fork
+.env
+*.env.local
+.env.*.local
