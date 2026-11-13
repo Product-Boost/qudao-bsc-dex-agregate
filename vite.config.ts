@@ -14,7 +14,6 @@ export default defineConfig(({ mode }) => {
       host: "127.0.0.1",
       port: Number(env.PORT ?? 7727),
       proxy: { "/api": { target: env.QUDAO_API ?? "http://localhost:8787", changeOrigin: true } },
-      fs: { allow: [".."] }, // contract ABIs live in ../shared
     },
     build: { chunkSizeWarningLimit: 1500 },
   };

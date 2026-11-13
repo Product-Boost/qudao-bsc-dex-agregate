@@ -14,7 +14,7 @@ import { PositionDrawer } from "../components/position/PositionDrawer";
 import { api } from "../lib/api";
 import { useTx } from "../lib/tx";
 import { usd } from "../lib/format";
-import { qudaoVaultAbi } from "../../../shared/abis";
+import { qudaoVaultAbi } from "../abis/abis";
 
 export default function Dashboard() {
   const { address } = useConnection();

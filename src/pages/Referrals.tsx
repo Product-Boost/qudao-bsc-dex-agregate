@@ -13,7 +13,7 @@ import { api } from "../lib/api";
 import { useAppConfig } from "../lib/config";
 import { useTx } from "../lib/tx";
 import { bps, date, short, sig } from "../lib/format";
-import { referralsAbi, revenueRouterAbi } from "../../../shared/abis";
+import { referralsAbi, revenueRouterAbi } from "../abis/abis";
 
 const XIcon = () => (
   <svg viewBox="0 0 24 24" className="size-4" fill="currentColor" aria-hidden>

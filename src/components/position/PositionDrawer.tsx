@@ -19,7 +19,7 @@ import { amount, ago, bps, dateTime, pct, sig, usd } from "../../lib/format";
 import { amountsFor, otherAmount, rangePrices } from "../../lib/v3";
 import { STRATEGIES, strategyIndex, strategyOf } from "../../data/strategies";
 import { BNB, type Token } from "../../hooks/tokens";
-import { qudaoFactoryAbi, qudaoVaultAbi } from "../../../../shared/abis";
+import { qudaoFactoryAbi, qudaoVaultAbi } from "../../abis/abis";
 
 type Tab = "overview" | "add" | "withdraw" | "settings" | "history";
 

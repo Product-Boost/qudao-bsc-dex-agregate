@@ -12,7 +12,7 @@ import { api } from "../lib/api";
 import { useAppConfig } from "../lib/config";
 import { useTx } from "../lib/tx";
 import { approvalsNeeded } from "../lib/permit2";
-import { swapperAbi } from "../../../shared/abis";
+import { swapperAbi } from "../abis/abis";
 import { BNB, NATIVE, useBaseTokens, useResolvedToken, useTokenBalance, type Token } from "../hooks/tokens";
 import { bps, sig } from "../lib/format";
 

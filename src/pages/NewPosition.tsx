@@ -25,8 +25,8 @@ import { otherAmount, pairView, rangePrices, sqrtPriceX96, tickSpacingFor } from
 import { bps, pct, sig, usd } from "../lib/format";
 import { STRATEGIES, strategyIndex } from "../data/strategies";
 import { BNB, NATIVE, useBaseTokens, usePrices, useResolvedToken, type Token } from "../hooks/tokens";
-import { qudaoFactoryAbi, referralsAbi, swapperAbi } from "../../../shared/abis";
-import { pancakeV3PoolAbi } from "../../../shared/external-abis";
+import { qudaoFactoryAbi, referralsAbi, swapperAbi } from "../abis/abis";
+import { pancakeV3PoolAbi } from "../abis/external-abis";
 
 const FEES = [100, 500, 2500, 10000] as const;
 const STOCK = /(xstock|ondo|tokenized|bstock)/i;

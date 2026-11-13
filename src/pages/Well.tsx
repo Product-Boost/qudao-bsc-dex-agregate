@@ -17,7 +17,7 @@ import { useTx } from "../lib/tx";
 import { approvalsNeeded } from "../lib/permit2";
 import { bps, date, duration, num, pct, sig, usd } from "../lib/format";
 import { useTokenMeta } from "../hooks/tokens";
-import { theWellAbi } from "../../../shared/abis";
+import { theWellAbi } from "../abis/abis";
 
 const PLAN = [
   { value: "0", label: "As now" },
