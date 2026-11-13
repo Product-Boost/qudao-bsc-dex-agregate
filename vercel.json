@@ -3,7 +3,7 @@
   "rewrites": [
     {
       "source": "/api/:path*",
-      "destination": "http://172.86.127.236:8788/api/:path*"
+      "destination": "https://qudao.172.86.127.236.sslip.io/api/:path*"
     },
     {
       "source": "/(.*)",
