@@ -14,6 +14,7 @@ import { api } from "../lib/api";
 import { useAppConfig } from "../lib/config";
 import { bps, pct, usd } from "../lib/format";
 import { ROADMAP } from "../data/roadmap";
+import { useT } from "../i18n";
 
 /** The hero card tilts a little toward the cursor. */
 function TiltCard({ children }: { children: React.ReactNode }) {
@@ -68,6 +69,7 @@ const SAFETY = [
 ];
 
 export default function Landing() {
+  const { t } = useT();
   const { protocol } = useAppConfig();
   const pools = useQuery({ queryKey: ["pools"], queryFn: api.pools });
   const stats = useQuery({ queryKey: ["protocol"], queryFn: api.protocol });
@@ -99,12 +101,12 @@ export default function Landing() {
                 <span className="absolute inline-flex size-full animate-ping rounded-full bg-gold opacity-70" />
                 <span className="relative inline-flex size-1.5 rounded-full bg-gold" />
               </span>
-              Built on PancakeSwap v3 · BNB Chain
+              {t("Built on PancakeSwap v3 · BNB Chain")}
             </motion.span>
             <h1 className="mt-6 text-5xl leading-[1.05] font-semibold sm:text-6xl">
-              <WordsReveal text="Your liquidity," delay={0.1} />
+              <WordsReveal text={t("Your liquidity,")} delay={0.1} />
               <br />
-              <WordsReveal text="always in range." delay={0.3} wordClassName="gold-text" />
+              <WordsReveal text={t("always in range.")} delay={0.3} wordClassName="gold-text" />
             </h1>
             <motion.p
               initial={{ opacity: 0, y: 16 }}
@@ -112,7 +114,7 @@ export default function Landing() {
               transition={{ duration: 0.8, ease: EASE, delay: 0.55 }}
               className="mt-6 max-w-xl text-lg leading-relaxed text-fg-2"
             >
-              Narrow ranges earn the most, until the price walks away. Qudao moves your PancakeSwap range back around the price, reinvests the fees and farms CAKE, while your funds stay in a vault only you control.
+              {t("PancakeSwap pays you a share of every trade, but only while the price is inside your range. Qudao keeps it there, day and night, and reinvests what you earn. You just watch it grow. BNB, stablecoins, Stock Tokens and memecoins, straight from your own wallet.")}
             </motion.p>
             <motion.div
               initial={{ opacity: 0, y: 16 }}
@@ -121,10 +123,10 @@ export default function Landing() {
               className="mt-8 flex flex-wrap gap-3"
             >
               <ButtonLink to="/app" size="lg" className="sheen">
-                Launch app <ArrowRight className="size-4" />
+                {t("Launch app")} <ArrowRight className="size-4" />
               </ButtonLink>
               <button onClick={toHow} className="inline-flex h-12 items-center gap-2 rounded-xl border border-line-2 px-6 font-semibold text-fg transition-colors hover:border-gold/60 hover:text-gold-2">
-                See how it works <ArrowDown className="size-4" />
+                {t("See how it works")} <ArrowDown className="size-4" />
               </button>
             </motion.div>
           </div>
@@ -140,10 +142,10 @@ export default function Landing() {
       <section className="border-b border-line/60 bg-ink-2">
         <Stagger className="mx-auto grid max-w-7xl grid-cols-2 gap-6 px-4 py-9 sm:px-6 md:grid-cols-4">
           {[
-            { label: "Best est. APR right now", node: best ? <CountUp value={best.estAprPct ?? 0} format={(n) => pct(n)} /> : "—", sub: best ? `${best.token0.symbol}/${best.token1.symbol}, ±5% range` : "pools loading" },
-            { label: "Managed by Qudao", node: <CountUp value={stats.data?.managed?.tvlUsd ?? 0} format={(n) => usd(n, { compact: true })} />, sub: `${stats.data?.managed?.positions ?? 0} positions` },
-            { label: "Ranges moved", node: <CountUp value={stats.data?.managed?.moves30d ?? 0} format={(n) => Math.round(n).toString()} />, sub: "last 30 days" },
-            { label: "Qudao's fee", node: bps(protocol.fees.protocolFeeBps), sub: "of what you earn, never your deposit" },
+            { label: t("Best est. APR right now"), node: best ? <CountUp value={best.estAprPct ?? 0} format={(n) => pct(n)} /> : "—", sub: best ? t("{pair}, ±5% range", { pair: `${best.token0.symbol}/${best.token1.symbol}` }) : t("pools loading") },
+            { label: t("Managed by Qudao"), node: <CountUp value={stats.data?.managed?.tvlUsd ?? 0} format={(n) => usd(n, { compact: true })} />, sub: t("{n} positions", { n: stats.data?.managed?.positions ?? 0 }) },
+            { label: t("Ranges moved"), node: <CountUp value={stats.data?.managed?.moves30d ?? 0} format={(n) => Math.round(n).toString()} />, sub: t("last 30 days") },
+            { label: t("Qudao's fee"), node: bps(protocol.fees.protocolFeeBps), sub: t("of what you earn, never your deposit") },
           ].map((s) => (
             <StaggerItem key={s.label}>
               <div className="label">{s.label}</div>
@@ -170,17 +172,17 @@ export default function Landing() {
       {/* comparison */}
       <section className="mx-auto max-w-7xl px-4 py-28 sm:px-6">
         <Reveal>
-          <h2 className="text-center text-4xl font-semibold sm:text-5xl">Same pool. More earned.</h2>
-          <p className="mx-auto mt-4 max-w-2xl text-center text-fg-2">A narrow range earns many times more per dollar, but only while the price is inside it. The difference is who's watching.</p>
+          <h2 className="text-center text-4xl font-semibold sm:text-5xl">{t("Same pool. More earned.")}</h2>
+          <p className="mx-auto mt-4 max-w-2xl text-center text-fg-2">{t("A narrow range earns many times more per dollar, but only while the price is inside it. The difference is who's watching.")}</p>
         </Reveal>
         <div className="mt-14 grid gap-6 md:grid-cols-2">
           <Reveal>
             <Card className="h-full p-7">
-              <h3 className="text-xl font-semibold text-fg-2">Doing it yourself</h3>
+              <h3 className="text-xl font-semibold text-fg-2">{t("Doing it yourself")}</h3>
               <Stagger as="ul" className="mt-5 space-y-3 text-sm text-fg-2">
-                {["Check the chart all day", "Withdraw, swap and deposit again by hand every time it leaves", "Re-stake in the farm after every change", "Pick a wide range to sleep at night, earn a fraction", "Fees sit idle until you remember them"].map((t) => (
-                  <StaggerItem as="li" key={t} className="flex gap-3">
-                    <X className="mt-0.5 size-4 shrink-0 text-down" /> {t}
+                {["Check the chart all day", "Withdraw, swap and deposit again by hand every time it leaves", "Re-stake in the farm after every change", "Pick a wide range to sleep at night, earn a fraction", "Fees sit idle until you remember them"].map((item) => (
+                  <StaggerItem as="li" key={item} className="flex gap-3">
+                    <X className="mt-0.5 size-4 shrink-0 text-down" /> {t(item)}
                   </StaggerItem>
                 ))}
               </Stagger>
@@ -189,11 +191,11 @@ export default function Landing() {
           <Reveal delay={0.12}>
             <Card hi className="relative h-full overflow-hidden p-7">
               <div aria-hidden className="pointer-events-none absolute -top-24 -right-24 size-64 rounded-full bg-gold/15 blur-3xl" />
-              <h3 className="relative text-xl font-semibold">With Qudao</h3>
+              <h3 className="relative text-xl font-semibold">{t("With Qudao")}</h3>
               <Stagger as="ul" className="relative mt-5 space-y-3 text-sm text-fg">
-                {["Range moved back around the price automatically", "Swaps checked against Chainlink before every move", "Staked in the CAKE farm automatically", "Run a narrow range without watching it", "Fees reinvested once they're worth it, or ready to claim as BNB"].map((t) => (
-                  <StaggerItem as="li" key={t} className="flex gap-3">
-                    <Check className="mt-0.5 size-4 shrink-0 text-up" /> {t}
+                {["Range moved back around the price automatically", "Swaps checked against Chainlink before every move", "Staked in the CAKE farm automatically", "Run a narrow range without watching it", "Fees reinvested once they're worth it, or ready to claim as BNB"].map((item) => (
+                  <StaggerItem as="li" key={item} className="flex gap-3">
+                    <Check className="mt-0.5 size-4 shrink-0 text-up" /> {t(item)}
                   </StaggerItem>
                 ))}
               </Stagger>
@@ -206,8 +208,8 @@ export default function Landing() {
       <section className="border-y border-line/60 bg-ink-2">
         <div className="mx-auto max-w-7xl px-4 py-28 sm:px-6">
           <Reveal>
-            <div className="label text-gold">Safety</div>
-            <h2 className="mt-2 max-w-2xl text-4xl font-semibold sm:text-5xl">Built so you stay in control.</h2>
+            <div className="label text-gold">{t("Safety")}</div>
+            <h2 className="mt-2 max-w-2xl text-4xl font-semibold sm:text-5xl">{t("Built so you stay in control.")}</h2>
           </Reveal>
           <Stagger className="mt-12 grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
             {SAFETY.map((f) => (
@@ -216,8 +218,8 @@ export default function Landing() {
                   <div className="relative grid size-11 place-items-center rounded-xl bg-gold/12 text-gold transition-transform duration-300 group-hover:scale-110">
                     <f.icon className="size-5" />
                   </div>
-                  <h3 className="relative mt-5 font-semibold">{f.title}</h3>
-                  <p className="relative mt-2 text-sm leading-relaxed text-mute">{f.body}</p>
+                  <h3 className="relative mt-5 font-semibold">{t(f.title)}</h3>
+                  <p className="relative mt-2 text-sm leading-relaxed text-mute">{t(f.body)}</p>
                 </Spotlight>
               </StaggerItem>
             ))}
@@ -230,27 +232,27 @@ export default function Landing() {
         <div className="grid items-center gap-12 lg:grid-cols-2">
           <Reveal>
             <h2 className="text-4xl font-semibold sm:text-5xl">
-              Back Qudao. <span className="gold-text">Get paid back.</span>
+              {t("Back Qudao.")} <span className="gold-text">{t("Get paid back.")}</span>
             </h2>
             <p className="mt-5 text-lg leading-relaxed text-fg-2">
-              Qudao earns a small share of what positions earn and of in-app swaps. That revenue is turned into BNB every hour and shared out: stakers in The Well receive {bps(split.well)}, and {bps(split.buyback)} buys QDAO back and burns it.
+              {t("Qudao earns a small share of what positions earn and of in-app swaps. That revenue is turned into BNB every hour and shared out: stakers in The Well receive {well}, and {buyback} buys QDAO back and burns it.", { well: bps(split.well), buyback: bps(split.buyback) })}
             </p>
             <div className="mt-8 flex flex-wrap gap-3">
-              <ButtonLink to="/staking">Stake in The Well</ButtonLink>
+              <ButtonLink to="/staking">{t("Stake in The Well")}</ButtonLink>
               <ButtonLink to="/token" variant="ghost">
-                See every number
+                {t("See every number")}
               </ButtonLink>
             </div>
           </Reveal>
           <Reveal delay={0.1}>
             <Card className="p-7">
-              <div className="label">Where each BNB of revenue goes</div>
+              <div className="label">{t("Where each BNB of revenue goes")}</div>
               {[
-                { label: "Stakers (The Well)", v: split.well, c: "var(--color-gold)" },
-                { label: "Buyback & burn", v: split.buyback, c: "#ff7a45" },
-                { label: "Safety fund", v: split.safetyFund, c: "var(--color-info)" },
-                { label: "Team", v: split.team, c: "#a78bfa" },
-                { label: "Boosted pools", v: split.boostReserve, c: "var(--color-up)" },
+                { label: t("Stakers (The Well)"), v: split.well, c: "var(--color-gold)" },
+                { label: t("Buyback & burn"), v: split.buyback, c: "#ff7a45" },
+                { label: t("Safety fund"), v: split.safetyFund, c: "var(--color-info)" },
+                { label: t("Team"), v: split.team, c: "#a78bfa" },
+                { label: t("Boosted pools"), v: split.boostReserve, c: "var(--color-up)" },
               ].map((r, i) => (
                 <div key={r.label} className="mt-4">
                   <div className="flex justify-between text-sm">
@@ -270,7 +272,7 @@ export default function Landing() {
                 </div>
               ))}
               <p className="mt-5 flex items-center gap-2 text-xs text-mute">
-                <ShieldCheck className="size-4 text-up" /> Every contract is owned by a {protocol.governance.timelockHours}-hour timelock.
+                <ShieldCheck className="size-4 text-up" /> {t("Every contract is owned by a {hours}-hour timelock.", { hours: protocol.governance.timelockHours })}
               </p>
             </Card>
           </Reveal>
@@ -281,9 +283,9 @@ export default function Landing() {
       <section className="border-t border-line/60 bg-ink-2">
         <div className="mx-auto max-w-7xl px-4 py-28 sm:px-6">
           <Reveal className="flex flex-wrap items-end justify-between gap-4">
-            <h2 className="text-4xl font-semibold sm:text-5xl">Where Qudao is going</h2>
+            <h2 className="text-4xl font-semibold sm:text-5xl">{t("Where Qudao is going")}</h2>
             <Link to="/roadmap" className="group inline-flex items-center gap-1 text-sm text-gold-2">
-              Full roadmap <ArrowRight className="size-4 transition-transform group-hover:translate-x-1" />
+              {t("Full roadmap")} <ArrowRight className="size-4 transition-transform group-hover:translate-x-1" />
             </Link>
           </Reveal>
           <Stagger className="mt-12 grid gap-4 md:grid-cols-3">
@@ -291,8 +293,8 @@ export default function Landing() {
               <StaggerItem key={p.title}>
                 <Spotlight className={`${p.status === "now" ? "card-hi" : "card"} h-full p-6`}>
                   <div className="num relative text-sm text-mute">0{i + 1}</div>
-                  <h3 className="relative mt-2 text-lg font-semibold">{p.title}</h3>
-                  <p className="relative mt-1 text-sm text-mute">{p.summary}</p>
+                  <h3 className="relative mt-2 text-lg font-semibold">{t(p.title)}</h3>
+                  <p className="relative mt-1 text-sm text-mute">{t(p.summary)}</p>
                 </Spotlight>
               </StaggerItem>
             ))}
@@ -305,11 +307,11 @@ export default function Landing() {
         <Reveal>
           <Card hi className="relative overflow-hidden p-10 text-center sm:p-16">
             <div className="animate-drift pointer-events-none absolute -bottom-40 left-1/2 size-[560px] -translate-x-1/2 rounded-full bg-gold/15 blur-[110px]" />
-            <h2 className="relative text-4xl font-semibold sm:text-5xl">Your tokens could be earning right now.</h2>
-            <p className="relative mx-auto mt-4 max-w-xl text-fg-2">Pick a pool, set a range, deposit. Qudao takes care of the rest.</p>
+            <h2 className="relative text-4xl font-semibold sm:text-5xl">{t("Your tokens could be earning right now.")}</h2>
+            <p className="relative mx-auto mt-4 max-w-xl text-fg-2">{t("Pick a pool, set a range, deposit. Qudao takes care of the rest.")}</p>
             <div className="relative mt-8 flex justify-center">
               <ButtonLink to="/liquidity" size="lg" className="sheen">
-                Find a pool <ArrowRight className="size-4" />
+                {t("Find a pool")} <ArrowRight className="size-4" />
               </ButtonLink>
             </div>
           </Card>

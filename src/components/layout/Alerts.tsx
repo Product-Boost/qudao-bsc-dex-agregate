@@ -12,6 +12,7 @@ import { useAppConfig } from "../../lib/config";
 import { friendlyError } from "../../lib/errors";
 import { toast } from "../../lib/toast";
 import { ConnectButton } from "./Wallet";
+import { useT } from "../../i18n";
 
 const supported = typeof window !== "undefined" && "serviceWorker" in navigator && "PushManager" in window && "Notification" in window;
 
@@ -36,15 +37,16 @@ function b64ToBytes(b64: string) {
 }
 
 export function AlertsButton() {
+  const { t } = useT();
   const [open, setOpen] = useState(false);
   const { data } = useQuery({ queryKey: ["push-sub"], queryFn: async () => (await currentSubscription())?.endpoint ?? null, enabled: supported });
   return (
     <>
-      <button onClick={() => setOpen(true)} aria-label="Alerts" className="relative grid size-9 place-items-center rounded-xl border border-line-2 text-fg-2 hover:border-gold/50 hover:text-gold-2">
+      <button onClick={() => setOpen(true)} aria-label={t("Alerts")} className="relative grid size-9 place-items-center rounded-xl border border-line-2 text-fg-2 hover:border-gold/50 hover:text-gold-2">
         {data ? <BellRing className="size-4" /> : <Bell className="size-4" />}
         {data && <span className="absolute top-1.5 right-1.5 size-1.5 rounded-full bg-gold" />}
       </button>
-      <Drawer open={open} onClose={() => setOpen(false)} title="Alerts">
+      <Drawer open={open} onClose={() => setOpen(false)} title={t("Alerts")}>
         <AlertsPanel />
       </Drawer>
     </>
@@ -52,6 +54,7 @@ export function AlertsButton() {
 }
 
 function AlertsPanel() {
+  const { t } = useT();
   const { push } = useAppConfig();
   const { address } = useConnection();
   const config = useConfig();
@@ -74,7 +77,7 @@ function AlertsPanel() {
     setBusy(true);
     try {
       const perm = await Notification.requestPermission();
-      if (perm !== "granted") throw new Error("The browser blocked notifications. Allow them for this site in the browser settings.");
+      if (perm !== "granted") throw new Error(t("The browser blocked notifications. Allow them for this site in the browser settings."));
       const reg = await navigator.serviceWorker.register("/sw.js");
       await navigator.serviceWorker.ready;
       const s =
@@ -83,12 +86,12 @@ function AlertsPanel() {
       const { message, issuedAt } = await api.alertMessage(address);
       const signature = await signMessage(config, { message });
       await api.alertSubscribe({ owner: address, issuedAt, signature, subscription: s.toJSON() });
-      toast.info("Alerts are on", "This browser will be told about your positions.");
+      toast.info(t("Alerts are on"), t("This browser will be told about your positions."));
       await refetch();
       qc.invalidateQueries({ queryKey: ["push-sub"] });
     } catch (e) {
       const f = friendlyError(e);
-      if (!f.cancelled) toast.error("Couldn't turn on alerts", f.message);
+      if (!f.cancelled) toast.error(t("Couldn't turn on alerts"), f.message);
     } finally {
       setBusy(false);
     }
@@ -115,22 +118,22 @@ function AlertsPanel() {
     try {
       await api.alertPrefs(sub.endpoint, patch);
     } catch (e) {
-      toast.error("Couldn't save", friendlyError(e).message);
+      toast.error(t("Couldn't save"), friendlyError(e).message);
     }
   };
 
-  if (!supported) return <Notice tone="warn">This browser can't receive alerts. On iPhone, add Qudao to your home screen first (Share → Add to Home Screen).</Notice>;
-  if (!push.enabled || !push.vapidPublicKey) return <Notice>Alerts aren't switched on for this server yet.</Notice>;
+  if (!supported) return <Notice tone="warn">{t("This browser can't receive alerts. On iPhone, add Qudao to your home screen first (Share → Add to Home Screen).")}</Notice>;
+  if (!push.enabled || !push.vapidPublicKey) return <Notice>{t("Alerts aren't switched on for this server yet.")}</Notice>;
 
   if (!sub?.server)
     return (
       <div className="space-y-5">
         <p className="text-sm leading-relaxed text-fg-2">
-          Get a browser notification when a position leaves its range, when the range is moved, when fees are ready and once a week with a summary. You sign a message to prove the wallet is yours: it isn't a transaction and costs nothing.
+          {t("Get a browser notification when a position leaves its range, when the range is moved, when fees are ready and once a week with a summary. You sign a message to prove the wallet is yours: it isn't a transaction and costs nothing.")}
         </p>
         {address ? (
           <Button onClick={enable} busy={busy}>
-            <BellRing className="size-4" /> Turn on alerts
+            <BellRing className="size-4" /> {t("Turn on alerts")}
           </Button>
         ) : (
           <ConnectButton />
@@ -141,17 +144,17 @@ function AlertsPanel() {
   return (
     <div className="space-y-6">
       <Notice tone="gold">
-        Alerts are on in this browser for <span className="font-mono">{sub.server.owner.slice(0, 8)}…</span>
+        {t("Alerts are on in this browser for")} <span className="font-mono">{sub.server.owner.slice(0, 8)}…</span>
       </Notice>
       <div className="space-y-4">
         {KINDS.map((k) => (
           <div key={k.key} className="flex items-start justify-between gap-4">
             <div>
-              <div className="text-sm font-medium">{k.label}</div>
-              <div className="text-xs text-mute">{k.sub}</div>
+              <div className="text-sm font-medium">{t(k.label)}</div>
+              <div className="text-xs text-mute">{t(k.sub)}</div>
               {k.key === "feesReady" && prefs?.feesReady && (
                 <label className="mt-2 flex items-center gap-2 text-xs text-fg-2">
-                  Minimum
+                  {t("Minimum")}
                   <span className="flex items-center rounded-lg border border-line bg-ink-2 px-2">
                     $
                     <input
@@ -170,11 +173,11 @@ function AlertsPanel() {
         ))}
       </div>
       <div className="flex flex-wrap gap-2">
-        <Button variant="ghost" onClick={() => api.alertTest(sub.endpoint).then(() => toast.info("Test sent", "It should appear in a few seconds."))}>
-          Send a test
+        <Button variant="ghost" onClick={() => api.alertTest(sub.endpoint).then(() => toast.info(t("Test sent"), t("It should appear in a few seconds.")))}>
+          {t("Send a test")}
         </Button>
         <Button variant="danger" onClick={disable} busy={busy}>
-          <BellOff className="size-4" /> Turn off
+          <BellOff className="size-4" /> {t("Turn off")}
         </Button>
       </div>
     </div>

@@ -1,6 +1,7 @@
 // The six scenes of "How it works". Each gets the scroll progress through its own step (0 → 1) and animates
 // from it, so the story plays forward and backward with the reader's scroll.
 import { motion, useReducedMotion, useTransform, type MotionValue } from "motion/react";
+import { useT } from "../../i18n";
 import { Check, Flame, MousePointer2, Sprout } from "lucide-react";
 import { TokenIcon } from "../TokenIcon";
 import { EASE } from "../../lib/ease";
@@ -24,6 +25,7 @@ const POOLS = [
 ];
 
 export function PickPool({ progress }: P) {
+  const { t } = useT();
   const pick = useTransform(progress, [0.25, 0.45], [0, 1]);
   const border = useTransform(pick, [0, 1], ["rgba(44,43,50,1)", "rgba(240,185,11,0.9)"]);
   const glow = useTransform(pick, [0, 1], ["0 0 0 0 rgba(240,185,11,0)", "0 0 0 6px rgba(240,185,11,0.12)"]);
@@ -54,13 +56,13 @@ export function PickPool({ progress }: P) {
                 )}
                 <TokenIcon symbol={pool.b} size={24} className="-ml-2 ring-2 ring-ink-2" />
               </span>
-              <span className="truncate text-xs font-semibold sm:text-sm">{pool.a === "?" ? "Any token" : `${pool.a} / ${pool.b}`}</span>
+              <span className="truncate text-xs font-semibold sm:text-sm">{pool.a === "?" ? t("Any token") : `${pool.a} / ${pool.b}`}</span>
             </div>
             <div className="flex items-center justify-between gap-1 text-[10px] whitespace-nowrap sm:text-xs">
-              <span className="rounded-full bg-panel-3 px-1.5 py-0.5 text-fg-2 sm:px-2">{pool.fee}</span>
+              <span className="rounded-full bg-panel-3 px-1.5 py-0.5 text-fg-2 sm:px-2">{t(pool.fee)}</span>
               <span className={`inline-flex min-w-0 items-center gap-1 truncate ${pool.farm ? "text-gold-2" : i === 2 ? "text-info" : "text-mute"}`}>
                 {pool.farm && <Sprout className="size-3" />}
-                {pool.tag}
+                {t(pool.tag)}
               </span>
             </div>
             {i === 0 && (
@@ -73,7 +75,7 @@ export function PickPool({ progress }: P) {
       </div>
       <motion.div style={{ opacity: next, y: nextY }} className="mt-2 flex items-center justify-between rounded-xl border border-gold/30 bg-gold/[0.07] px-3 py-2 text-xs sm:mt-4 sm:px-4 sm:py-3 sm:text-sm">
         <span className="text-fg-2"><span className="hidden sm:inline">PancakeSwap v3 · </span>BNB / USDT 0.05%</span>
-        <span className="font-semibold text-gold-2">Selected</span>
+        <span className="font-semibold text-gold-2">{t("Selected")}</span>
       </motion.div>
       <motion.span style={{ left: cursorX, top: cursorY, opacity: cursorO }} className="pointer-events-none absolute z-10 text-fg drop-shadow-[0_2px_6px_rgba(0,0,0,0.8)]">
         <MousePointer2 className="size-5 fill-fg" />
@@ -112,6 +114,7 @@ function Bar({ i, h, half }: { i: number; h: number; half: MotionValue<number> }
 }
 
 export function SetRange({ progress }: P) {
+  const { t } = useT();
   const half = useTransform(progress, [0.05, 0.75], [250, 70]);
   const left = useTransform(half, (h) => CENTER - h);
   const width = useTransform(half, (h) => h * 2);
@@ -131,14 +134,14 @@ export function SetRange({ progress }: P) {
         <line x1={0} x2={W} y1={H - 40} y2={H - 40} stroke="var(--color-line-2)" />
       </svg>
       <div className="absolute top-2 left-3 rounded-lg border border-line bg-ink/80 px-2 py-1 backdrop-blur sm:top-4 sm:left-5 sm:rounded-xl sm:px-3 sm:py-2">
-        <div className="label text-[9px] sm:text-xs">Range</div>
+        <div className="label text-[9px] sm:text-xs">{t("Range")}</div>
         <motion.div className="num text-sm font-semibold text-gold-2 sm:text-lg">{pct}</motion.div>
       </div>
       <div className="absolute top-2 right-3 rounded-lg border border-line bg-ink/80 px-2 py-1 text-right backdrop-blur sm:top-4 sm:right-5 sm:rounded-xl sm:px-3 sm:py-2">
-        <div className="label text-[9px] sm:text-xs">Est. APR</div>
+        <div className="label text-[9px] sm:text-xs">{t("Est. APR")}</div>
         <motion.div className="num text-sm font-semibold text-up sm:text-lg">{apr}</motion.div>
       </div>
-      <div className="absolute inset-x-0 bottom-1 text-center text-[10px] text-mute sm:bottom-2 sm:text-xs">Liquidity by price · now</div>
+      <div className="absolute inset-x-0 bottom-1 text-center text-[10px] text-mute sm:bottom-2 sm:text-xs">{t("Liquidity by price · now")}</div>
     </div>
   );
 }
@@ -162,6 +165,7 @@ function Band({ band, i, head }: { band: (typeof BANDS)[number]; i: number; head
 }
 
 function MoveChip({ band, head }: { band: (typeof BANDS)[number]; head: MotionValue<number> }) {
+  const { t } = useT();
   const o = useTransform(head, [band.x0, band.x0 + 18], [0, 1]);
   const y = useTransform(o, [0, 1], [8, 0]);
   return (
@@ -169,7 +173,7 @@ function MoveChip({ band, head }: { band: (typeof BANDS)[number]; head: MotionVa
       style={{ left: `${(band.x0 / W) * 100}%`, top: `${((band.c - BAND_HALF - 30) / H) * 100}%`, opacity: o, y }}
       className="absolute -translate-x-1/2 rounded-full border border-gold/40 bg-ink/90 px-2.5 py-1 text-[11px] whitespace-nowrap text-gold-2 shadow-lg"
     >
-      Range moved
+      {t("Range moved")}
     </motion.div>
   );
 }
@@ -215,6 +219,7 @@ const FLOW = "M206,188 C280,96 352,96 424,170";
 const FLOW2 = "M206,214 C280,300 352,300 424,232";
 
 export function FeesCake({ progress, feeText }: P & { feeText: string }) {
+  const { t } = useT();
   const reduce = useReducedMotion();
   const reinvest = useTransform(progress, [0.1, 0.7], ["0%", "70%"]);
   const claim = useTransform(progress, [0.3, 0.8], ["0%", "30%"]);
@@ -239,20 +244,20 @@ export function FeesCake({ progress, feeText }: P & { feeText: string }) {
           ))}
       </svg>
       <motion.div {...enter(0)} className="absolute top-[40%] left-[6%] w-[26%] rounded-xl border border-line bg-ink-2/90 p-2 text-center sm:rounded-2xl sm:p-3">
-        <div className="label text-[9px] whitespace-nowrap sm:text-xs">Pool fees</div>
-        <div className="mt-1 hidden text-sm text-fg-2 sm:block">every swap</div>
+        <div className="label text-[9px] whitespace-nowrap sm:text-xs">{t("Pool fees")}</div>
+        <div className="mt-1 hidden text-sm text-fg-2 sm:block">{t("every swap")}</div>
       </motion.div>
       <motion.div {...enter(1)} className="absolute top-[33%] left-[66%] w-[30%] rounded-xl border border-gold/40 bg-ink-2/95 p-2 shadow-[var(--shadow-glow)] sm:rounded-2xl sm:p-3">
-        <div className="label text-[9px] whitespace-nowrap sm:text-xs">Your position</div>
+        <div className="label text-[9px] whitespace-nowrap sm:text-xs">{t("Your position")}</div>
         <motion.div className="num mt-0.5 text-sm font-semibold sm:mt-1 sm:text-xl">{value}</motion.div>
         <div className="mt-1 hidden items-center gap-1 text-xs text-gold-2 sm:flex">
-          <TokenIcon symbol="CAKE" size={14} /> <motion.span className="num">{cake}</motion.span> CAKE farmed
+          <TokenIcon symbol="CAKE" size={14} /> <motion.span className="num">{cake}</motion.span> {t("CAKE farmed")}
         </div>
       </motion.div>
       <div className="absolute inset-x-[6%] bottom-[7%]">
         <div className="mb-1.5 flex justify-between text-[10px] text-mute sm:text-xs">
-          <span>Reinvested<span className="hidden sm:inline"> automatically</span></span>
-          <span><span className="hidden sm:inline">Ready </span>to claim</span>
+          <span><span className="sm:hidden">{t("Reinvested")}</span><span className="hidden sm:inline">{t("Reinvested automatically")}</span></span>
+          <span><span className="sm:hidden">{t("to claim")}</span><span className="hidden sm:inline">{t("Ready to claim")}</span></span>
         </div>
         <div className="flex h-2 gap-1 sm:h-2.5 overflow-hidden rounded-full bg-panel-3">
           <motion.div style={{ width: reinvest }} className="h-full rounded-full bg-gold" />
@@ -280,6 +285,7 @@ function Cell({ r, c, progress, target }: { r: number; c: number; progress: Moti
 }
 
 export function Well({ progress }: P) {
+  const { t } = useT();
   const fee = useTransform(progress, (p) => `${(2 - Math.min(1, p / 0.85) * 0.74).toFixed(2)}%`);
   const boost = useTransform(progress, (p) => `${(1 + Math.min(1, p / 0.85) * 0.75).toFixed(2)}×`);
   return (
@@ -291,15 +297,15 @@ export function Well({ progress }: P) {
       </div>
       <div className="min-w-0 flex-1 space-y-2 sm:space-y-4">
         <motion.div {...enter(0)} className="rounded-xl border border-line bg-ink-2/80 p-2.5 sm:rounded-2xl sm:p-4">
-          <div className="label text-[9px] whitespace-nowrap sm:text-xs">Your Qudao fee</div>
+          <div className="label text-[9px] whitespace-nowrap sm:text-xs">{t("Your Qudao fee")}</div>
           <motion.div className="num mt-1 text-lg font-semibold text-up sm:text-2xl">{fee}</motion.div>
         </motion.div>
         <motion.div {...enter(1)} className="rounded-xl border border-line bg-ink-2/80 p-2.5 sm:rounded-2xl sm:p-4">
-          <div className="label text-[9px] whitespace-nowrap sm:text-xs">Reward boost</div>
+          <div className="label text-[9px] whitespace-nowrap sm:text-xs">{t("Reward boost")}</div>
           <motion.div className="num mt-1 text-lg font-semibold text-gold-2 sm:text-2xl">{boost}</motion.div>
         </motion.div>
         <motion.div {...enter(2)} className="hidden items-center gap-2 text-xs text-mute sm:flex">
-          <TokenIcon symbol="BNB" size={16} /> BNB streams to stakers every second
+          <TokenIcon symbol="BNB" size={16} /> {t("BNB streams to stakers every second")}
         </motion.div>
       </div>
     </div>
@@ -328,26 +334,28 @@ const BURNS = [
 ];
 
 function BurnRow({ b, i, progress }: { b: (typeof BURNS)[number]; i: number; progress: MotionValue<number> }) {
+  const { t } = useT();
   const o = useTransform(progress, [0.25 + i * 0.15, 0.37 + i * 0.15], [0, 1]);
   const x = useTransform(o, [0, 1], [-16, 0]);
   return (
     <motion.div style={{ opacity: o, x }} className={`items-center justify-between rounded-xl border border-line bg-ink-2/80 px-3 py-1.5 text-[11px] sm:py-2 sm:text-xs ${i > 0 ? "hidden sm:flex" : "flex"}`}>
       <span className="flex items-center gap-2 text-fg-2">
-        <Flame className="size-3.5 text-[#ff7a45]" /> {b.bnb} BNB bought <span className="num text-fg">{b.qdao} QDAO</span>
+        <Flame className="size-3.5 text-[#ff7a45]" /> {t("{bnb} BNB bought", { bnb: b.bnb })} <span className="num text-fg">{b.qdao} QDAO</span>
       </span>
-      <span className="text-mute">{b.when}</span>
+      <span className="text-mute">{t(b.when)}</span>
     </motion.div>
   );
 }
 
 export function Burn({ progress, split }: P & { split: Record<(typeof SPLIT)[number]["key"], number> }) {
+  const { t } = useT();
   const reduce = useReducedMotion();
   const supply = useTransform(progress, (p) => Math.round(1_000_000_000 - Math.min(1, p / 0.9) * 1_240_000).toLocaleString("en-US"));
   const burned = useTransform(progress, (p) => `${(Math.min(1, p / 0.9) * 1.24).toFixed(2)}M`);
   return (
     <div className="flex h-full flex-col justify-between p-4 sm:p-7">
       <div>
-        <div className="label mb-2 hidden sm:block">Each BNB of revenue</div>
+        <div className="label mb-2 hidden sm:block">{t("Each BNB of revenue")}</div>
         <div className="flex h-3.5 overflow-hidden rounded-full bg-panel-3">
           {SPLIT.map((s, i) => (
             <SplitSeg key={s.key} bps={split[s.key]} color={s.color} from={i * 0.08} progress={progress} />
@@ -357,7 +365,7 @@ export function Burn({ progress, split }: P & { split: Record<(typeof SPLIT)[num
           {SPLIT.map((s) => (
             <span key={s.key} className="inline-flex items-center gap-1.5">
               <span className="size-2 rounded-sm" style={{ background: s.color }} />
-              {s.label} {split[s.key] / 100}%
+              {t(s.label)} {split[s.key] / 100}%
             </span>
           ))}
         </div>
@@ -376,10 +384,10 @@ export function Burn({ progress, split }: P & { split: Record<(typeof SPLIT)[num
           <Flame className="size-6 sm:size-10" />
         </motion.div>
         <div className="min-w-0">
-          <div className="label">QDAO supply</div>
+          <div className="label">{t("QDAO supply")}</div>
           <motion.div className="num text-lg font-semibold sm:text-3xl">{supply}</motion.div>
           <div className="mt-1 hidden text-xs text-mute sm:block">
-            <motion.span className="num text-[#ff7a45]">{burned}</motion.span> burned, sent to 0x…dEaD
+            <motion.span className="num text-[#ff7a45]">{burned}</motion.span> {t("burned, sent to 0x…dEaD")}
           </div>
         </div>
       </div>

@@ -1,5 +1,6 @@
 // Turns wallet and contract errors into sentences people can act on.
 import { BaseError, ContractFunctionRevertedError, UserRejectedRequestError } from "viem";
+import { t } from "../i18n";
 
 const CONTRACT: Record<string, string> = {
   PriceDeviates: "The pool's price is too far from the reference price right now. Try again in a minute.",
@@ -46,18 +47,18 @@ const CONTRACT: Record<string, string> = {
 
 export function friendlyError(e: unknown): { message: string; cancelled: boolean } {
   if (e instanceof BaseError) {
-    if (e.walk((x) => x instanceof UserRejectedRequestError)) return { message: "You cancelled in your wallet.", cancelled: true };
+    if (e.walk((x) => x instanceof UserRejectedRequestError)) return { message: t("You cancelled in your wallet."), cancelled: true };
     const revert = e.walk((x) => x instanceof ContractFunctionRevertedError) as ContractFunctionRevertedError | null;
     const name = revert?.data?.errorName;
-    if (name && CONTRACT[name]) return { message: CONTRACT[name], cancelled: false };
-    if (name) return { message: `The contract refused: ${name}.`, cancelled: false };
-    if (/insufficient funds/i.test(e.message)) return { message: "Not enough BNB to pay for this and its network fee.", cancelled: false };
-    if (/user (rejected|denied)|rejected the request/i.test(e.message)) return { message: "You cancelled in your wallet.", cancelled: true };
+    if (name && CONTRACT[name]) return { message: t(CONTRACT[name]), cancelled: false };
+    if (name) return { message: t("The contract refused: {name}.", { name }), cancelled: false };
+    if (/insufficient funds/i.test(e.message)) return { message: t("Not enough BNB to pay for this and its network fee."), cancelled: false };
+    if (/user (rejected|denied)|rejected the request/i.test(e.message)) return { message: t("You cancelled in your wallet."), cancelled: true };
     return { message: e.shortMessage, cancelled: false };
   }
   if (e instanceof Error) {
-    if (/user (rejected|denied)|rejected the request/i.test(e.message)) return { message: "You cancelled in your wallet.", cancelled: true };
+    if (/user (rejected|denied)|rejected the request/i.test(e.message)) return { message: t("You cancelled in your wallet."), cancelled: true };
     return { message: e.message, cancelled: false };
   }
-  return { message: "Something went wrong.", cancelled: false };
+  return { message: t("Something went wrong."), cancelled: false };
 }

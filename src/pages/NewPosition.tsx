@@ -27,6 +27,7 @@ import { STRATEGIES, strategyIndex } from "../data/strategies";
 import { BNB, NATIVE, useBaseTokens, usePrices, useResolvedToken, type Token } from "../hooks/tokens";
 import { qudaoFactoryAbi, referralsAbi, swapperAbi } from "../abis/abis";
 import { pancakeV3PoolAbi } from "../abis/external-abis";
+import { useT } from "../i18n";
 
 const FEES = [100, 500, 2500, 10000] as const;
 const STOCK = /(xstock|ondo|tokenized|bstock)/i;
@@ -71,6 +72,7 @@ const toRaw = (v: string, d: number) => {
 const fromRaw = (raw: number, d: number) => (raw > 0 ? String(Number((raw / 10 ** d).toPrecision(8))) : "0");
 
 export default function NewPosition() {
+  const { t } = useT();
   const [params] = useSearchParams();
   const navigate = useNavigate();
   const cfg = useAppConfig();
@@ -255,16 +257,16 @@ export default function NewPosition() {
   const [busy, setBusy] = useState(false);
   const open = async () => {
     const missing = !dep
-      ? "Qudao isn't live on this network yet."
+      ? t("Qudao isn't live on this network yet.")
       : !address
-        ? "Connect a wallet."
+        ? t("Connect a wallet.")
         : !tok0 || !tok1 || !t0 || !t1 || !sel || tick === null
-          ? "Choose a pair and a pool first."
+          ? t("Choose a pair and a pool first.")
           : !chainId
-            ? "Your wallet didn't report its network. Reconnect it."
+            ? t("Your wallet didn't report its network. Reconnect it.")
             : null;
     if (missing || !dep || !address || !tok0 || !tok1 || !t0 || !t1 || !sel || tick === null || !chainId) {
-      toast.error("Can't open the position yet", missing ?? undefined);
+      toast.error(t("Can't open the position yet"), missing ?? undefined);
       return;
     }
     setBusy(true);
@@ -280,7 +282,7 @@ export default function NewPosition() {
           const outSide = oneSide === 0 ? 1 : 0;
           const tokenOut = wbnbSide === outSide && payNative ? NATIVE : outSide === 0 ? t0 : t1;
           const approvals = s.tokenIn === NATIVE ? [] : await approvalsNeeded(config, address, dep.swapper, [{ token: s.tokenIn, amount: BigInt(s.amountIn), symbol: oneToken?.symbol ?? "" }]);
-          const swapped = await tx("Swap part of your deposit", [
+          const swapped = await tx(t("Swap part of your deposit"), [
             ...approvals,
             {
               address: dep.swapper,
@@ -288,7 +290,7 @@ export default function NewPosition() {
               functionName: "swapForUser",
               args: [s.tokenIn, tokenOut, BigInt(s.amountIn), BigInt(s.minOut), s.router, s.data, address],
               value: s.tokenIn === NATIVE ? BigInt(s.amountIn) : 0n,
-              label: "Swap",
+              label: t("Swap"),
             },
           ]);
           if (!swapped) return;
@@ -326,10 +328,10 @@ export default function NewPosition() {
         functionName: "openPosition",
         args: [p, permit, signature],
         value,
-        label: "Open position",
+        label: t("Open position"),
       });
 
-      const done = await fund(creating ? "Create pool and open" : "Open position", dep.factory, erc, openCall);
+      const done = await fund(creating ? t("Create pool and open") : t("Open position"), dep.factory, erc, openCall);
       if (done) navigate("/dashboard");
     } finally {
       setBusy(false);
@@ -345,17 +347,17 @@ export default function NewPosition() {
   return (
     <Page>
       <ButtonLink to="/liquidity" variant="plain" size="sm" className="-ml-3 mb-4">
-        <ArrowLeft className="size-4" /> Pools
+        <ArrowLeft className="size-4" /> {t("Pools")}
       </ButtonLink>
-      <h1 className="mb-8 text-3xl font-semibold sm:text-4xl">New position</h1>
+      <h1 className="mb-8 text-3xl font-semibold sm:text-4xl">{t("New position")}</h1>
       <div className="grid gap-6 lg:grid-cols-[1fr_380px]">
         <div className="min-w-0 space-y-6">
-          <Step n={1} title="Pair and pool">
+          <Step n={1} title={t("Pair and pool")}>
             <div className="grid grid-cols-2 gap-3">
               <TokenButton token={A} onPick={setPickA} exclude={B ? [B.address] : []} />
               <TokenButton token={B} onPick={setPickB} exclude={A ? [A.address] : []} />
             </div>
-            {same && <Notice tone="warn" className="mt-3">Pick two different tokens (BNB and WBNB count as the same).</Notice>}
+            {same && <Notice tone="warn" className="mt-3">{t("Pick two different tokens (BNB and WBNB count as the same).")}</Notice>}
             {checks.map((c) =>
               c.data && c.data.verdict !== "ok" ? (
                 <Notice key={c.data.address} tone={c.data.verdict === "refuse" ? "down" : "warn"} className="mt-3">
@@ -371,7 +373,7 @@ export default function NewPosition() {
               ) : null,
             )}
             <div className="mt-5">
-              <div className="label mb-2">Fee tier</div>
+              <div className="label mb-2">{t("Fee tier")}</div>
               {pairQ.isLoading && <Skeleton className="h-20 w-full" />}
               <div className="grid grid-cols-2 gap-2 sm:grid-cols-4">
                 {(pools?.length ? pools : FEES.map((f) => ({ fee: f, exists: false }) as PairPool)).map((p) => (
@@ -382,25 +384,25 @@ export default function NewPosition() {
                   >
                     <div className="flex items-center justify-between">
                       <span className="num font-semibold">{pct(p.fee / 10_000, { digits: 2 })}</span>
-                      {p.farm && <Sprout className="size-4 text-gold" aria-label="CAKE farm" />}
+                      {p.farm && <Sprout className="size-4 text-gold" aria-label={t("CAKE farm")} />}
                     </div>
-                    <div className="mt-1 text-xs text-mute">{p.exists ? (p.liquidityUsd ? `${usd(p.liquidityUsd, { compact: true })} liquidity` : "Exists") : "No pool yet"}</div>
-                    {p.exists && !!p.aprPct && <div className="num text-xs text-fg-2">APR {pct(p.aprPct)}</div>}
+                    <div className="mt-1 text-xs text-mute">{p.exists ? (p.liquidityUsd ? t("{usd} liquidity", { usd: usd(p.liquidityUsd, { compact: true }) }) : t("Exists")) : t("No pool yet")}</div>
+                    {p.exists && !!p.aprPct && <div className="num text-xs text-fg-2">{t("APR")} {pct(p.aprPct)}</div>}
                   </button>
                 ))}
               </div>
               {sel?.farm && (
                 <p className="mt-3 flex items-center gap-2 text-sm text-fg-2">
                   <Badge tone="gold">
-                    <Sprout className="size-3" /> CAKE farm
+                    <Sprout className="size-3" /> {t("CAKE farm")}
                   </Badge>
-                  This pool earns CAKE rewards from PancakeSwap on top of the fees; Qudao stakes the position for you.
+                  {t("This pool earns CAKE rewards from PancakeSwap on top of the fees; Qudao stakes the position for you.")}
                 </p>
               )}
               {creating && view && (
                 <div className="mt-4 rounded-2xl border border-gold/30 bg-gold/[0.05] p-4">
-                  <div className="text-sm font-semibold">Create this pool</div>
-                  <p className="mt-1 text-xs text-mute">There's no {pct((fee ?? 0) / 10_000, { digits: 2 })} pool for this pair yet. Set its starting price; it's created in the same transaction as your position.</p>
+                  <div className="text-sm font-semibold">{t("Create this pool")}</div>
+                  <p className="mt-1 text-xs text-mute">{t("There's no {fee} pool for this pair yet. Set its starting price; it's created in the same transaction as your position.", { fee: pct((fee ?? 0) / 10_000, { digits: 2 }) })}</p>
                   <label className="mt-3 flex items-center gap-2 rounded-xl border border-line bg-ink-2 px-3">
                     <span className="text-sm text-mute">1 {view.base} =</span>
                     <input value={startPrice} onChange={(e) => /^\d*\.?\d*$/.test(e.target.value) && setStartPrice(e.target.value)} placeholder="0.0" className="num h-11 flex-1 bg-transparent font-semibold outline-none" />
@@ -411,7 +413,7 @@ export default function NewPosition() {
             </div>
           </Step>
 
-          <Step n={2} title="Price range">
+          <Step n={2} title={t("Price range")}>
             {view && tick !== null && ready ? (
               <RangeEditor
                 pool={sel?.exists ? sel.address : undefined}
@@ -425,7 +427,7 @@ export default function NewPosition() {
                 minWidthTicks={cfg.protocol.automation.minRangeWidthTicks}
               />
             ) : (
-              <p className="text-sm text-mute">{creating ? "Set the starting price above." : "Choose a pair and a fee tier."}</p>
+              <p className="text-sm text-mute">{creating ? t("Set the starting price above.") : t("Choose a pair and a fee tier.")}</p>
             )}
           </Step>
 
@@ -435,7 +437,7 @@ export default function NewPosition() {
             </Card>
           )}
 
-          <Step n={3} title="When the price moves">
+          <Step n={3} title={t("When the price moves")}>
             <div className="grid gap-2 sm:grid-cols-2">
               {STRATEGIES.map((s) => (
                 <button
@@ -443,38 +445,37 @@ export default function NewPosition() {
                   onClick={() => setStrategy(s.value)}
                   className={`rounded-2xl border p-4 text-left transition-colors ${strategy === s.value ? "border-gold/70 bg-gold/8" : "border-line bg-ink-2 hover:border-line-2"}`}
                 >
-                  <div className="font-semibold">{s.label}</div>
-                  <div className="mt-1 text-xs leading-relaxed text-mute">{s.body}</div>
+                  <div className="font-semibold">{t(s.label)}</div>
+                  <div className="mt-1 text-xs leading-relaxed text-mute">{t(s.body)}</div>
                 </button>
               ))}
             </div>
             {isStock && (
               <div className="mt-4 rounded-2xl border border-info/30 bg-info/[0.05] p-4">
-                <Toggle checked={waitForMarket} onChange={setWait} label="Wait for the stock market" />
+                <Toggle checked={waitForMarket} onChange={setWait} label={t("Wait for the stock market")} />
                 <p className="mt-2 text-xs text-mute">
-                  Stock Tokens follow a share price that only moves while the US market is open. With this on, the range waits for the open unless the price moves more than{" "}
-                  {bps(cfg.protocol.automation.stockMarket.overrideBps)}.
+                  {t("Stock Tokens follow a share price that only moves while the US market is open. With this on, the range waits for the open unless the price moves more than {bps}.", { bps: bps(cfg.protocol.automation.stockMarket.overrideBps) })}
                 </p>
               </div>
             )}
             <div className="mt-5 grid gap-5 sm:grid-cols-2">
               <div>
-                <Toggle checked={autoCompound} onChange={setAuto} label="Reinvest fees automatically" />
+                <Toggle checked={autoCompound} onChange={setAuto} label={t("Reinvest fees automatically")} />
                 {autoCompound && (
                   <div className="mt-3">
                     <div className="flex justify-between text-xs text-mute">
-                      <span>Share reinvested</span>
+                      <span>{t("Share reinvested")}</span>
                       <span className="num text-fg">{reinvest}%</span>
                     </div>
                     <input type="range" min={minShare} max={100} step={5} value={reinvest} onChange={(e) => setReinvest(Number(e.target.value))} className="mt-2 w-full accent-[var(--color-gold)]" />
-                    <p className="text-xs text-mute">The rest stays in the position, ready to claim.</p>
+                    <p className="text-xs text-mute">{t("The rest stays in the position, ready to claim.")}</p>
                   </div>
                 )}
               </div>
               <div>
                 <div className="flex items-center gap-1 text-sm text-fg-2">
-                  Swap price tolerance
-                  <Info>When a move or a reinvest swaps tokens, the swap is refused if its price is worse than this versus the checked price. Never above 5%.</Info>
+                  {t("Swap price tolerance")}
+                  <Info>{t("When a move or a reinvest swaps tokens, the swap is refused if its price is worse than this versus the checked price. Never above 5%.")}</Info>
                 </div>
                 <Segmented
                   size="sm"
@@ -489,12 +490,12 @@ export default function NewPosition() {
 
           <Step
             n={4}
-            title="Deposit"
-            right={sel?.exists ? <Segmented size="sm" value={mode} onChange={setMode} options={[{ value: "both", label: "Both tokens" }, { value: "one", label: "One token" }]} /> : undefined}
+            title={t("Deposit")}
+            right={sel?.exists ? <Segmented size="sm" value={mode} onChange={setMode} options={[{ value: "both", label: t("Both tokens") }, { value: "one", label: t("One token") }]} /> : undefined}
           >
             {wbnbSide !== null && (
               <div className="mb-4">
-                <Toggle checked={payNative} onChange={setPayNative} label="Pay with BNB (wrapped for you)" />
+                <Toggle checked={payNative} onChange={setPayNative} label={t("Pay with BNB (wrapped for you)")} />
               </div>
             )}
             {mode === "both" ? (
@@ -511,7 +512,7 @@ export default function NewPosition() {
                     />
                   ),
                 )}
-                {onlyOne !== null && <p className="text-xs text-mute">With the price outside the range, only {(onlyOne === 0 ? tok0 : tok1)?.symbol} is needed.</p>}
+                {onlyOne !== null && <p className="text-xs text-mute">{t("With the price outside the range, only {symbol} is needed.", { symbol: (onlyOne === 0 ? tok0 : tok1)?.symbol ?? "" })}</p>}
               </div>
             ) : (
               <div className="space-y-3">
@@ -521,16 +522,16 @@ export default function NewPosition() {
                 {planQ.data && tok0 && tok1 && (
                   <div className="rounded-2xl border border-line bg-ink-2 px-4 py-2">
                     {planQ.data.swap ? (
-                      <Row label="First, swap">
+                      <Row label={t("First, swap")}>
                         {sig(Number(formatUnits(BigInt(planQ.data.swap.amountIn), d[oneSide])))} {oneToken?.symbol} → {display(oneSide === 0 ? 1 : 0)?.symbol}
                       </Row>
                     ) : (
-                      <Row label="Swap">Not needed</Row>
+                      <Row label={t("Swap")}>{t("Not needed")}</Row>
                     )}
-                    <Row label="Then deposit">
+                    <Row label={t("Then deposit")}>
                       {sig(Number(formatUnits(BigInt(planQ.data.amount0), d[0])))} {display(0)?.symbol} + {sig(Number(formatUnits(BigInt(planQ.data.amount1), d[1])))} {display(1)?.symbol}
                     </Row>
-                    <p className="pb-1 text-xs text-mute">The swap is a separate transaction through Qudao's swap (0.15% fee). Anything not used stays in your wallet.</p>
+                    <p className="pb-1 text-xs text-mute">{t("The swap is a separate transaction through Qudao's swap (0.15% fee). Anything not used stays in your wallet.")}</p>
                   </div>
                 )}
                 {planQ.error && <Notice tone="warn">{(planQ.error as Error).message}</Notice>}
@@ -541,7 +542,7 @@ export default function NewPosition() {
 
         <div className="lg:sticky lg:top-24 lg:self-start">
           <Card hi className="p-5">
-            <h2 className="text-lg font-semibold">Review</h2>
+            <h2 className="text-lg font-semibold">{t("Review")}</h2>
             {tok0 && tok1 && view ? (
               <>
                 <div className="mt-4 flex items-center gap-3">
@@ -550,53 +551,53 @@ export default function NewPosition() {
                     <div className="font-semibold">
                       {view.base} / {view.quote}
                     </div>
-                    <div className="text-xs text-mute">PancakeSwap v3 · {pct((fee ?? 0) / 10_000, { digits: 2 })} fee tier</div>
+                    <div className="text-xs text-mute">{t("PancakeSwap v3 · {fee} fee tier", { fee: pct((fee ?? 0) / 10_000, { digits: 2 }) })}</div>
                   </div>
                 </div>
                 <div className="mt-4 divide-y divide-line/70">
-                  <Row label="Range">{ready ? `${sig(low)} – ${sig(high)}` : "—"}</Row>
-                  <Row label="Current price">{ready ? sig(current) : "—"}</Row>
-                  <Row label="Rule">{STRATEGIES.find((s) => s.value === strategy)?.short}</Row>
-                  <Row label="Reinvest">{autoCompound ? `${reinvest}% of fees` : "Off"}</Row>
-                  <Row label="Deposit value">{usd(depositUsd)}</Row>
-                  <Row label={<span className="inline-flex items-center gap-1">Qudao fee <Info>Taken from the fees your position earns (never from your deposit). Staking QDAO in The Well lowers it.</Info></span>}>
-                    {bps(feeBps)} of earned fees
+                  <Row label={t("Range")}>{ready ? `${sig(low)} – ${sig(high)}` : "—"}</Row>
+                  <Row label={t("Current price")}>{ready ? sig(current) : "—"}</Row>
+                  <Row label={t("Rule")}>{t(STRATEGIES.find((s) => s.value === strategy)?.short ?? "")}</Row>
+                  <Row label={t("Reinvest")}>{autoCompound ? t("{share} of fees", { share: `${reinvest}%` }) : t("Off")}</Row>
+                  <Row label={t("Deposit value")}>{usd(depositUsd)}</Row>
+                  <Row label={<span className="inline-flex items-center gap-1">{t("Qudao fee")} <Info>{t("Taken from the fees your position earns (never from your deposit). Staking QDAO in The Well lowers it.")}</Info></span>}>
+                    {bps(feeBps)} {t("of earned fees")}
                   </Row>
                 </div>
                 {dep && address && firstTime && alreadyReferred === zeroAddress && (
                   <div className="mt-4">
-                    <label className="label">Invite code (optional)</label>
+                    <label className="label">{t("Invite code (optional)")}</label>
                     <input
                       value={ref}
                       onChange={(e) => setRef(e.target.value.toLowerCase().replace(/[^a-z0-9]/g, "").slice(0, 8))}
-                      placeholder="8 letters or digits"
+                      placeholder={t("8 letters or digits")}
                       className="mt-1 h-10 w-full rounded-xl border border-line bg-ink-2 px-3 font-mono text-sm outline-none focus:border-gold/50"
                     />
                     {ref && (
                       <p className={`mt-1 text-xs ${refValid ? "text-up" : "text-mute"}`}>
                         {refValid
-                          ? `You'll pay ${bps(cfg.protocol.referrals.inviteeDiscountBps)} less Qudao fee for ${cfg.protocol.referrals.inviteeDiscountDays} days.`
+                          ? t("You'll pay {off} less Qudao fee for {days} days.", { off: bps(cfg.protocol.referrals.inviteeDiscountBps), days: cfg.protocol.referrals.inviteeDiscountDays })
                           : refOwner === address
-                            ? "That's your own code."
+                            ? t("That's your own code.")
                             : ref.length < 8
-                              ? "Codes are 8 letters or digits."
-                              : "No one has this code."}
+                              ? t("Codes are 8 letters or digits.")
+                              : t("No one has this code.")}
                       </p>
                     )}
                   </div>
                 )}
                 <div className="mt-5">
                   {!dep ? (
-                    <Notice>Deposits open when Qudao's contracts are live.</Notice>
+                    <Notice>{t("Deposits open when Qudao's contracts are live.")}</Notice>
                   ) : !address ? (
                     <ConnectButton className="w-full" size="lg" />
                   ) : (
                     <Button size="lg" className="w-full" disabled={!canOpen} busy={busy} onClick={open}>
-                      {refused ? "Token not supported" : raw0 === 0n && raw1 === 0n ? "Enter an amount" : creating ? "Create pool and open" : "Open position"}
+                      {refused ? t("Token not supported") : raw0 === 0n && raw1 === 0n ? t("Enter an amount") : creating ? t("Create pool and open") : t("Open position")}
                     </Button>
                   )}
                   <p className="mt-3 text-xs leading-relaxed text-mute">
-                    Opening creates a vault owned by your wallet. You can add funds, change settings or close it at any time, even while Qudao is paused.
+                    {t("Opening creates a vault owned by your wallet. You can add funds, change settings or close it at any time, even while Qudao is paused.")}
                   </p>
                 </div>
               </>

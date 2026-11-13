@@ -20,12 +20,14 @@ import { amountsFor, otherAmount, rangePrices } from "../../lib/v3";
 import { STRATEGIES, strategyIndex, strategyOf } from "../../data/strategies";
 import { BNB, type Token } from "../../hooks/tokens";
 import { qudaoFactoryAbi, qudaoVaultAbi } from "../../abis/abis";
+import { t as tr, useT } from "../../i18n";
 
 type Tab = "overview" | "add" | "withdraw" | "settings" | "history";
 
 const steps = (s: SwapStep[]) => s.map((x) => ({ tokenIn: x.tokenIn, tokenOut: x.tokenOut, amountIn: BigInt(x.amountIn), router: x.router, data: x.data }));
 
 export function PositionDrawer({ p, onClose }: { p: Position | null; onClose: () => void }) {
+  const { t } = useT();
   const [tab, setTab] = useState<Tab>("overview");
   if (!p) return null;
   const v = viewFor(p);
@@ -44,15 +46,15 @@ export function PositionDrawer({ p, onClose }: { p: Position | null; onClose: ()
         value={tab}
         onChange={setTab}
         options={[
-          { value: "overview", label: "Overview" },
+          { value: "overview", label: t("Overview") },
           ...(!p.closed
             ? [
-                { value: "add" as Tab, label: "Add funds" },
-                { value: "withdraw" as Tab, label: "Take out" },
-                { value: "settings" as Tab, label: "Settings" },
+                { value: "add" as Tab, label: t("Add funds") },
+                { value: "withdraw" as Tab, label: t("Take out") },
+                { value: "settings" as Tab, label: t("Settings") },
               ]
             : []),
-          { value: "history", label: "History" },
+          { value: "history", label: t("History") },
         ]}
       />
       <div className="mt-6">
@@ -67,6 +69,7 @@ export function PositionDrawer({ p, onClose }: { p: Position | null; onClose: ()
 }
 
 function Overview({ p }: { p: Position }) {
+  const { t } = useT();
   const tx = useTx();
   const v = viewFor(p);
   const [low, high] = rangePrices(v, p.tickLower, p.tickUpper);
@@ -90,20 +93,20 @@ function Overview({ p }: { p: Position }) {
   return (
     <div className="space-y-6">
       <div className="grid grid-cols-2 gap-5 sm:grid-cols-3">
-        <Stat label="Value" value={usd(p.valueUsd)} />
-        <Stat label="Fees to claim" value={<span className="text-up">{usd(p.feesUsd)}</span>} />
-        <Stat label="APR" value={<span className="text-gold-2">{p.aprPct !== undefined ? pct(p.aprPct) : "—"}</span>} sub="from fees since opening" />
-        <Stat label="Profit / loss" value={<span className={(p.pnlUsd ?? 0) >= 0 ? "text-up" : "text-down"}>{usd(p.pnlUsd, { sign: true })}</span>} sub="vs. prices when deposited" />
-        <Stat label="Put in" value={usd(p.depositedUsd)} sub={p.takenOutUsd ? `${usd(p.takenOutUsd)} taken out` : undefined} />
-        <Stat label="Fees earned" value={usd(p.feesEarnedUsd)} sub="incl. reinvested" />
+        <Stat label={t("Value")} value={usd(p.valueUsd)} />
+        <Stat label={t("Fees to claim")} value={<span className="text-up">{usd(p.feesUsd)}</span>} />
+        <Stat label={t("APR")} value={<span className="text-gold-2">{p.aprPct !== undefined ? pct(p.aprPct) : "—"}</span>} sub={t("from fees since opening")} />
+        <Stat label={t("Profit / loss")} value={<span className={(p.pnlUsd ?? 0) >= 0 ? "text-up" : "text-down"}>{usd(p.pnlUsd, { sign: true })}</span>} sub={t("vs. prices when deposited")} />
+        <Stat label={t("Put in")} value={usd(p.depositedUsd)} sub={p.takenOutUsd ? t("{usd} taken out", { usd: usd(p.takenOutUsd) }) : undefined} />
+        <Stat label={t("Fees earned")} value={usd(p.feesEarnedUsd)} sub={t("incl. reinvested")} />
       </div>
 
       {!p.closed && (
         <div className="rounded-2xl border border-line bg-ink-2 p-4">
           <div className="flex items-center justify-between text-sm">
-            <span className="font-medium">Range</span>
+            <span className="font-medium">{t("Range")}</span>
             <span className="text-xs text-mute">
-              {strategyOf(p.settings.strategy).label} · moved {p.lastRebalance > p.openedAt ? ago(p.lastRebalance) : "never"}
+              {t(strategyOf(p.settings.strategy).label)} · {t("moved {when}", { when: p.lastRebalance > p.openedAt ? ago(p.lastRebalance) : t("never") })}
             </span>
           </div>
           <div className="mt-4">
@@ -118,20 +121,20 @@ function Overview({ p }: { p: Position }) {
           </div>
           {!p.inRange && (
             <div className="mt-4 flex flex-wrap items-center justify-between gap-3">
-              <p className="text-xs text-fg-2">The price left the range, so it isn't earning. Qudao moves it back automatically; you can also do it now.</p>
+              <p className="text-xs text-fg-2">{t("The price left the range, so it isn't earning. Qudao moves it back automatically; you can also do it now.")}</p>
               <Button
                 size="sm"
                 variant="ghost"
                 busy={busy === "move"}
                 onClick={() =>
-                  run("move", "Move range", async () => {
+                  run("move", t("Move range"), async () => {
                     const plan = await api.planVault("rebalance", p.address);
-                    if (!plan || plan.lower === undefined) throw new Error("No new range available yet.");
+                    if (!plan || plan.lower === undefined) throw new Error(t("No new range available yet."));
                     return [call("rebalance", [plan.lower, plan.upper, steps(plan.steps)])];
                   })
                 }
               >
-                Move range now
+                {t("Move range now")}
               </Button>
             </div>
           )}
@@ -139,52 +142,56 @@ function Overview({ p }: { p: Position }) {
       )}
 
       <div className="rounded-2xl border border-line bg-ink-2 p-4">
-        <div className="mb-2 text-sm font-medium">In the position</div>
+        <div className="mb-2 text-sm font-medium">{t("In the position")}</div>
         <Row label={p.symbol0}>{amount(p.principal0, p.decimals0)}</Row>
         <Row label={p.symbol1}>{amount(p.principal1, p.decimals1)}</Row>
         {(BigInt(p.idle0) > 0n || BigInt(p.idle1) > 0n) && (
-          <Row label={<span className="inline-flex items-center gap-1">Waiting to be added <Info>Leftovers a move or reinvest couldn't place. They count as part of the position and are added back on the next move.</Info></span>}>
+          <Row label={<span className="inline-flex items-center gap-1">{t("Waiting to be added")} <Info>{t("Leftovers a move or reinvest couldn't place. They count as part of the position and are added back on the next move.")}</Info></span>}>
             {amount(p.idle0, p.decimals0)} {p.symbol0} · {amount(p.idle1, p.decimals1)} {p.symbol1}
           </Row>
         )}
-        <div className="mt-3 mb-2 text-sm font-medium">Fees to claim</div>
+        <div className="mt-3 mb-2 text-sm font-medium">{t("Fees to claim")}</div>
         <Row label={p.symbol0}>{amount(fees0, p.decimals0)}</Row>
         <Row label={p.symbol1}>{amount(fees1, p.decimals1)}</Row>
         {(cake > 0n || p.staked) && (
-          <Row label={<span className="inline-flex items-center gap-1.5">CAKE {p.staked && <Badge tone="gold">farming</Badge>}</span>}>{amount(cake, 18)}</Row>
+          <Row label={<span className="inline-flex items-center gap-1.5">CAKE {p.staked && <Badge tone="gold">{t("farming")}</Badge>}</span>}>{amount(cake, 18)}</Row>
         )}
-        <p className="mt-2 text-xs text-mute">Before the Qudao fee. {p.settings.autoCompound ? `${p.settings.reinvestBps / 100}% of new fees are reinvested automatically.` : "Automatic reinvesting is off."}</p>
+        <p className="mt-2 text-xs text-mute">
+          {p.settings.autoCompound
+            ? t("Before the Qudao fee. {share} of new fees are reinvested automatically.", { share: `${p.settings.reinvestBps / 100}%` })
+            : t("Before the Qudao fee. Automatic reinvesting is off.")}
+        </p>
       </div>
 
       <div className="flex flex-wrap gap-2">
-        <Button busy={busy === "claim"} disabled={p.feesUsd <= 0} onClick={() => run("claim", "Claim fees", async () => [call("claim")])}>
-          Claim
+        <Button busy={busy === "claim"} disabled={p.feesUsd <= 0} onClick={() => run("claim", t("Claim fees"), async () => [call("claim")])}>
+          {t("Claim")}
         </Button>
         <Button
           variant="ghost"
           busy={busy === "bnb"}
           disabled={p.feesUsd <= 0}
           onClick={() =>
-            run("bnb", "Claim as BNB", async () => {
+            run("bnb", t("Claim as BNB"), async () => {
               const plan = await api.planVault("claim-bnb", p.address);
               return [call("claimAsBNB", [steps(plan?.steps ?? [])])];
             })
           }
         >
-          Claim as BNB
+          {t("Claim as BNB")}
         </Button>
         {!p.closed && (
           <Button
             variant="ghost"
             busy={busy === "compound"}
             onClick={() =>
-              run("compound", "Compound now", async () => {
+              run("compound", t("Compound now"), async () => {
                 const plan = await api.planVault("compound", p.address);
                 return [call("compound", [steps(plan?.steps ?? [])])];
               })
             }
           >
-            Compound now
+            {t("Compound now")}
           </Button>
         )}
       </div>
@@ -193,6 +200,7 @@ function Overview({ p }: { p: Position }) {
 }
 
 function AddFunds({ p }: { p: Position }) {
+  const { t } = useT();
   const cfg = useAppConfig();
   const fund = useFunding();
   const wbnb = getAddress(cfg.wbnb);
@@ -228,7 +236,7 @@ function AddFunds({ p }: { p: Position }) {
       const n1 = wbnbSide === 1 && native ? a1 : 0n;
       const min = (x: bigint) => (x * BigInt(10_000 - p.settings.slippageBps)) / 10_000n;
       await fund(
-        "Add funds",
+        t("Add funds"),
         cfg.deployment.factory,
         [
           { token: p.token0, amount: a0 - n0, symbol: p.symbol0 },
@@ -240,7 +248,7 @@ function AddFunds({ p }: { p: Position }) {
           functionName: "addFunds",
           args: [p.address, a0, a1, min(a0), min(a1), permit, signature],
           value: n0 + n1,
-          label: "Add funds",
+          label: t("Add funds"),
         }),
       );
       setAmt(["", ""]);
@@ -251,17 +259,18 @@ function AddFunds({ p }: { p: Position }) {
   const onlyOne = p.tick < p.tickLower ? 0 : p.tick >= p.tickUpper ? 1 : null;
   return (
     <div className="space-y-3">
-      <p className="text-sm text-fg-2">Added at the position's current range. Whatever doesn't fit the ratio goes back to your wallet.</p>
-      {wbnbSide !== null && <Toggle checked={native} onChange={setNative} label="Pay with BNB" />}
+      <p className="text-sm text-fg-2">{t("Added at the position's current range. Whatever doesn't fit the ratio goes back to your wallet.")}</p>
+      {wbnbSide !== null && <Toggle checked={native} onChange={setNative} label={t("Pay with BNB")} />}
       {([0, 1] as const).map((s) => (onlyOne !== null && onlyOne !== s ? null : <AmountInput key={s} token={token(s)} value={amt[s]} onChange={(val) => edit(s, val)} maxReserve={parseUnits("0.005", 18)} />))}
       <Button className="w-full" size="lg" busy={busy} disabled={raw(0) === 0n && raw(1) === 0n} onClick={go}>
-        Add funds
+        {t("Add funds")}
       </Button>
     </div>
   );
 }
 
 function Withdraw({ p, onClosed }: { p: Position; onClosed: () => void }) {
+  const { t } = useT();
   const tx = useTx();
   const [share, setShare] = useState(50);
   const [busy, setBusy] = useState(false);
@@ -274,11 +283,11 @@ function Withdraw({ p, onClosed }: { p: Position; onClosed: () => void }) {
     setBusy(true);
     try {
       if (share === 100) {
-        const ok = await tx("Close position", [{ address: p.address, abi: qudaoVaultAbi, functionName: "close", args: [min(e0), min(e1)] }]);
+        const ok = await tx(t("Close position"), [{ address: p.address, abi: qudaoVaultAbi, functionName: "close", args: [min(e0), min(e1)] }]);
         if (ok) onClosed();
       } else {
         const liq = (L * BigInt(share)) / 100n;
-        await tx("Take out", [{ address: p.address, abi: qudaoVaultAbi, functionName: "withdraw", args: [liq, min(e0), min(e1)] }]);
+        await tx(t("Take out"), [{ address: p.address, abi: qudaoVaultAbi, functionName: "withdraw", args: [liq, min(e0), min(e1)] }]);
       }
     } finally {
       setBusy(false);
@@ -288,33 +297,34 @@ function Withdraw({ p, onClosed }: { p: Position; onClosed: () => void }) {
     <div className="space-y-5">
       <div>
         <div className="flex items-end justify-between">
-          <span className="label">Amount</span>
+          <span className="label">{t("Amount")}</span>
           <span className="num text-3xl font-semibold">{share}%</span>
         </div>
         <input type="range" min={5} max={100} step={5} value={share} onChange={(e) => setShare(Number(e.target.value))} className="mt-3 w-full accent-[var(--color-gold)]" />
         <div className="mt-2 flex gap-2">
           {[25, 50, 75, 100].map((x) => (
             <button key={x} onClick={() => setShare(x)} className={`rounded-lg border px-3 py-1 text-xs ${share === x ? "border-gold/60 text-gold-2" : "border-line text-fg-2"}`}>
-              {x === 100 ? "All (close)" : `${x}%`}
+              {x === 100 ? t("All (close)") : `${x}%`}
             </button>
           ))}
         </div>
       </div>
       <div className="rounded-2xl border border-line bg-ink-2 px-4 py-2">
-        <Row label={`You receive ${p.symbol0}`}>≈ {sig((e0 * part) / 10 ** p.decimals0)}</Row>
-        <Row label={`You receive ${p.symbol1}`}>≈ {sig((e1 * part) / 10 ** p.decimals1)}</Row>
-        <Row label="Value">≈ {usd(p.valueUsd * part)}</Row>
-        {share === 100 && <p className="pb-1 text-xs text-mute">Closing also sends any unclaimed fees and CAKE to your wallet.</p>}
+        <Row label={t("You receive {symbol}", { symbol: p.symbol0 })}>≈ {sig((e0 * part) / 10 ** p.decimals0)}</Row>
+        <Row label={t("You receive {symbol}", { symbol: p.symbol1 })}>≈ {sig((e1 * part) / 10 ** p.decimals1)}</Row>
+        <Row label={t("Value")}>≈ {usd(p.valueUsd * part)}</Row>
+        {share === 100 && <p className="pb-1 text-xs text-mute">{t("Closing also sends any unclaimed fees and CAKE to your wallet.")}</p>}
       </div>
-      <Notice>Taking out and closing always work, even if Qudao is paused. Tolerance: {bps(slip)}.</Notice>
+      <Notice>{t("Taking out and closing always work, even if Qudao is paused. Tolerance: {slip}.", { slip: bps(slip) })}</Notice>
       <Button className="w-full" size="lg" variant={share === 100 ? "danger" : "gold"} busy={busy} onClick={go}>
-        {share === 100 ? "Close position" : `Take out ${share}%`}
+        {share === 100 ? t("Close position") : t("Take out {share}%", { share })}
       </Button>
     </div>
   );
 }
 
 function Settings({ p }: { p: Position }) {
+  const { t } = useT();
   const cfg = useAppConfig();
   const tx = useTx();
   const [s, setS] = useState(p.settings);
@@ -324,7 +334,7 @@ function Settings({ p }: { p: Position }) {
   const save = async () => {
     setBusy(true);
     try {
-      await tx("Save settings", [
+      await tx(t("Save settings"), [
         {
           address: p.address,
           abi: qudaoVaultAbi,
@@ -339,7 +349,7 @@ function Settings({ p }: { p: Position }) {
   return (
     <div className="space-y-6">
       <div>
-        <div className="label mb-2">When the price moves</div>
+        <div className="label mb-2">{t("When the price moves")}</div>
         <div className="grid gap-2">
           {STRATEGIES.map((x) => (
             <button
@@ -347,20 +357,20 @@ function Settings({ p }: { p: Position }) {
               onClick={() => setS({ ...s, strategy: x.value as StrategyName })}
               className={`rounded-2xl border p-3 text-left ${s.strategy === x.value ? "border-gold/70 bg-gold/8" : "border-line bg-ink-2"}`}
             >
-              <div className="text-sm font-semibold">{x.label}</div>
-              <div className="text-xs text-mute">{x.body}</div>
+              <div className="text-sm font-semibold">{t(x.label)}</div>
+              <div className="text-xs text-mute">{t(x.body)}</div>
             </button>
           ))}
         </div>
-        <p className="mt-2 text-xs text-mute">A new rule applies from the next move. Dynamic rules stay between half and twice the width you started with.</p>
+        <p className="mt-2 text-xs text-mute">{t("A new rule applies from the next move. Dynamic rules stay between half and twice the width you started with.")}</p>
       </div>
-      {isStock && <Toggle checked={s.waitForMarket} onChange={(x) => setS({ ...s, waitForMarket: x })} label="Wait for the stock market to open" />}
+      {isStock && <Toggle checked={s.waitForMarket} onChange={(x) => setS({ ...s, waitForMarket: x })} label={t("Wait for the stock market to open")} />}
       <div>
-        <Toggle checked={s.autoCompound} onChange={(x) => setS({ ...s, autoCompound: x })} label="Reinvest fees automatically" />
+        <Toggle checked={s.autoCompound} onChange={(x) => setS({ ...s, autoCompound: x })} label={t("Reinvest fees automatically")} />
         {s.autoCompound && (
           <div className="mt-3">
             <div className="flex justify-between text-xs text-mute">
-              <span>Share reinvested</span>
+              <span>{t("Share reinvested")}</span>
               <span className="num text-fg">{s.reinvestBps / 100}%</span>
             </div>
             <input
@@ -376,11 +386,11 @@ function Settings({ p }: { p: Position }) {
         )}
       </div>
       <div>
-        <div className="label mb-2">Swap price tolerance</div>
+        <div className="label mb-2">{t("Swap price tolerance")}</div>
         <Segmented size="sm" value={String(s.slippageBps)} onChange={(x) => setS({ ...s, slippageBps: Number(x) })} options={[100, 200, 300, 400, 500].map((b) => ({ value: String(b), label: bps(b) }))} />
       </div>
       <Button className="w-full" size="lg" disabled={!changed} busy={busy} onClick={save}>
-        Save settings
+        {t("Save settings")}
       </Button>
     </div>
   );
@@ -388,53 +398,69 @@ function Settings({ p }: { p: Position }) {
 
 function describe(e: ChainEvent, p: Position): string {
   const a = e.args as Record<string, string>;
-  const t = (x: string | undefined, side: 0 | 1) => `${amount(x ?? "0", side ? p.decimals1 : p.decimals0)} ${side ? p.symbol1 : p.symbol0}`;
+  const tok = (x: string | undefined, side: 0 | 1) => `${amount(x ?? "0", side ? p.decimals1 : p.decimals0)} ${side ? p.symbol1 : p.symbol0}`;
+  const extra = (parts: string[]) => (parts.length ? ` + ${parts.join(" + ")}` : "");
   const v = viewFor(p);
   const priceAt = (tick: number) => sig(v.at(tick));
   switch (e.name) {
     case "Opened":
-      return `Opened with ${t(a.amount0, 0)} and ${t(a.amount1, 1)}`;
+      return tr("Opened with {a} and {b}", { a: tok(a.amount0, 0), b: tok(a.amount1, 1) });
     case "FundsAdded":
-      return `Added ${t(a.amount0, 0)} and ${t(a.amount1, 1)}`;
+      return tr("Added {a} and {b}", { a: tok(a.amount0, 0), b: tok(a.amount1, 1) });
     case "Withdrawn":
-      return `Took out ${t(a.amount0, 0)} and ${t(a.amount1, 1)}`;
+      return tr("Took out {a} and {b}", { a: tok(a.amount0, 0), b: tok(a.amount1, 1) });
     case "Closed":
-      return `Closed: ${t(a.amount0, 0)} and ${t(a.amount1, 1)} sent to the wallet`;
+      return tr("Closed: {a} and {b} sent to the wallet", { a: tok(a.amount0, 0), b: tok(a.amount1, 1) });
     case "Rebalanced": {
       const [lo, hi] = [priceAt(Number(a.newLower)), priceAt(Number(a.newUpper))].sort((x, y) => Number(x.replace(/,/g, "")) - Number(y.replace(/,/g, "")));
-      return `Range moved to ${lo} – ${hi} (price ${priceAt(Number(a.tick))})`;
+      return tr("Range moved to {lo} – {hi} (price {price})", { lo, hi, price: priceAt(Number(a.tick)) });
     }
     case "Reinvested":
-      return `Reinvested ${t(a.amount0, 0)} and ${t(a.amount1, 1)}`;
+      return tr("Reinvested {a} and {b}", { a: tok(a.amount0, 0), b: tok(a.amount1, 1) });
     case "FeesCollected":
-      return `Fees collected: ${t(a.fees0, 0)} and ${t(a.fees1, 1)}${BigInt(a.cakeEarned ?? 0) > 0n ? ` + ${amount(a.cakeEarned, 18)} CAKE` : ""}`;
+      return tr("Fees collected: {a} and {b}{extra}", {
+        a: tok(a.fees0, 0),
+        b: tok(a.fees1, 1),
+        extra: extra(BigInt(a.cakeEarned ?? 0) > 0n ? [`${amount(a.cakeEarned, 18)} CAKE`] : []),
+      });
     case "Claimed":
-      return `Claimed ${t(a.amount0, 0)} and ${t(a.amount1, 1)}${BigInt(a.bnb ?? 0) > 0n ? ` + ${amount(a.bnb, 18)} BNB` : ""}${BigInt(a.cakeAmount ?? 0) > 0n ? ` + ${amount(a.cakeAmount, 18)} CAKE` : ""}`;
+      return tr("Claimed {a} and {b}{extra}", {
+        a: tok(a.amount0, 0),
+        b: tok(a.amount1, 1),
+        extra: extra([...(BigInt(a.bnb ?? 0) > 0n ? [`${amount(a.bnb, 18)} BNB`] : []), ...(BigInt(a.cakeAmount ?? 0) > 0n ? [`${amount(a.cakeAmount, 18)} CAKE`] : [])]),
+      });
     case "SettingsUpdated": {
       const s = (e.args as { settings: { strategy: number; autoCompound: boolean; reinvestBps: number } }).settings;
-      return `Settings: ${STRATEGIES[s.strategy]?.short ?? "rule"}, reinvest ${s.autoCompound ? `${s.reinvestBps / 100}%` : "off"}`;
+      return tr("Settings: {rule}, reinvest {share}", {
+        rule: tr(STRATEGIES[s.strategy]?.short ?? "rule"),
+        share: s.autoCompound ? `${s.reinvestBps / 100}%` : tr("off"),
+      });
     }
     case "Swapped":
-      return `Swapped ${a.tokenIn?.toLowerCase() === p.token0.toLowerCase() ? p.symbol0 : p.symbol1} → ${a.tokenOut?.toLowerCase() === p.token0.toLowerCase() ? p.symbol0 : p.symbol1}`;
+      return tr("Swapped {a} → {b}", {
+        a: a.tokenIn?.toLowerCase() === p.token0.toLowerCase() ? p.symbol0 : p.symbol1,
+        b: a.tokenOut?.toLowerCase() === p.token0.toLowerCase() ? p.symbol0 : p.symbol1,
+      });
     case "KeeperRefunded":
-      return `Automation gas refunded: ${amount(a.amount, 18, 5)} BNB`;
+      return tr("Automation gas refunded: {amount} BNB", { amount: amount(a.amount, 18, 5) });
     case "FarmStaked":
-      return "Staked in the CAKE farm";
+      return tr("Staked in the CAKE farm");
     case "FarmUnstaked":
-      return "Unstaked from the CAKE farm";
+      return tr("Unstaked from the CAKE farm");
     default:
       return e.name;
   }
 }
 
 function History({ p }: { p: Position }) {
+  const { t } = useT();
   const { chain } = useAppConfig();
   const { data, isLoading } = useQuery({ queryKey: ["position-history", p.address], queryFn: () => api.positionHistory(p.address) });
   const events = [...(data?.events ?? [])].reverse();
   return (
     <div>
-      {isLoading && <p className="text-sm text-mute">Loading…</p>}
-      {data && events.length === 0 && <p className="text-sm text-mute">Nothing yet. Events appear here a few seconds after they happen.</p>}
+      {isLoading && <p className="text-sm text-mute">{t("Loading…")}</p>}
+      {data && events.length === 0 && <p className="text-sm text-mute">{t("Nothing yet. Events appear here a few seconds after they happen.")}</p>}
       <ol className="relative space-y-4 border-l border-line pl-5">
         {events.map((e) => (
           <li key={`${e.tx}-${e.name}-${e.block}`} className="relative">
@@ -443,14 +469,14 @@ function History({ p }: { p: Position }) {
             <div className="mt-0.5 flex items-center gap-2 text-xs text-mute">
               {dateTime(e.ts)}
               <a href={`${chain.explorer}/tx/${e.tx}`} target="_blank" rel="noreferrer" className="inline-flex items-center gap-0.5 hover:text-gold-2">
-                tx <ExternalLink className="size-3" />
+                {t("Tx")} <ExternalLink className="size-3" />
               </a>
             </div>
           </li>
         ))}
       </ol>
       <p className="mt-6 text-xs text-mute">
-        Vault <span className="font-mono">{p.address}</span> · position NFT #{p.tokenId}
+        {t("Vault {address} · position NFT #{id}", { address: p.address, id: p.tokenId })}
       </p>
     </div>
   );

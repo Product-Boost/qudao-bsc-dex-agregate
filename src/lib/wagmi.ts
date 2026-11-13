@@ -6,6 +6,7 @@ import { injected } from "wagmi/connectors/injected";
 import { walletConnect } from "wagmi/connectors/walletConnect";
 import { mock } from "wagmi/connectors/mock";
 import type { Address, Chain } from "viem";
+import { getLocale } from "../i18n/locale";
 
 /** VITE_CHAIN=bsc_testnet builds the app for BSC testnet (chain 97). */
 export const isTestnet = import.meta.env.VITE_CHAIN === "bsc_testnet";
@@ -34,7 +35,7 @@ export const wagmiConfig = createConfig({
             showQrModal: false, // the picker draws its own QR code and opens each wallet's app
             metadata: {
               name: "Qudao",
-              description: "Automated PancakeSwap v3 liquidity on BNB Chain",
+              description: getLocale() === "zh" ? "在 BNB Chain 上自动管理 PancakeSwap v3 流动性" : "Automated PancakeSwap v3 liquidity on BNB Chain",
               url: origin,
               icons: [`${origin}/favicon.svg`],
             },

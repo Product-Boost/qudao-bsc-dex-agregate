@@ -1,8 +1,8 @@
 @import "tailwindcss";
 
 @theme {
-  --font-sans: "Manrope Variable", ui-sans-serif, system-ui, sans-serif;
-  --font-display: "Space Grotesk Variable", "Manrope Variable", ui-sans-serif, sans-serif;
+  --font-sans: "Manrope Variable", "PingFang SC", "Hiragino Sans GB", "Microsoft YaHei", "Noto Sans SC", ui-sans-serif, system-ui, sans-serif;
+  --font-display: "Space Grotesk Variable", "PingFang SC", "Hiragino Sans GB", "Microsoft YaHei", "Noto Sans SC", ui-sans-serif, sans-serif;
   --font-mono: "JetBrains Mono Variable", ui-monospace, monospace;
 
   /* surfaces: warm near-black */
@@ -48,6 +48,10 @@
   }
   h1, h2, h3, h4 {
     @apply font-display tracking-tight;
+  }
+  html[lang="zh-CN"] .uppercase {
+    text-transform: none;
+    letter-spacing: 0.02em;
   }
   ::selection {
     background: rgb(240 185 11 / 0.35);

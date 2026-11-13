@@ -3,6 +3,7 @@ import { useId, useState, type ButtonHTMLAttributes, type ReactNode } from "reac
 import { motion } from "motion/react";
 import { Link } from "react-router-dom";
 import { ExternalLink, Info as InfoIcon, Loader2 } from "lucide-react";
+import { useT } from "../i18n";
 
 type Variant = "gold" | "ghost" | "soft" | "danger" | "plain";
 type Size = "sm" | "md" | "lg";
@@ -170,10 +171,11 @@ export function Empty({ icon, title, children, action }: { icon?: ReactNode; tit
 
 /** A small "i" that shows an explanation on hover or tap. */
 export function Info({ children, className = "" }: { children: ReactNode; className?: string }) {
+  const { t } = useT();
   const [open, setOpen] = useState(false);
   return (
     <span className={`relative inline-flex align-middle ${className}`} onMouseEnter={() => setOpen(true)} onMouseLeave={() => setOpen(false)}>
-      <button type="button" aria-label="More information" onClick={() => setOpen((o) => !o)} className="text-dim hover:text-gold-2">
+      <button type="button" aria-label={t("More information")} onClick={() => setOpen((o) => !o)} className="text-dim hover:text-gold-2">
         <InfoIcon className="size-3.5" />
       </button>
       {open && (

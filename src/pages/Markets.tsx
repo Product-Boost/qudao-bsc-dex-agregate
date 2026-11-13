@@ -12,23 +12,25 @@ import { api, type MarketRow, type MarketTab } from "../lib/api";
 import { ago, price, usd } from "../lib/format";
 import { useAppConfig } from "../lib/config";
 import type { Token } from "../hooks/tokens";
+import { t as tr, useT } from "../i18n";
 
 const TABS: { value: MarketTab; label: string; sub: (n: number) => string }[] = [
-  { value: "top", label: "Top", sub: (n) => `The ${n} most traded tokens on PancakeSwap in the last 24 hours.` },
-  { value: "new", label: "New", sub: (n) => `Tokens whose first pool opened in the last ${n} days.` },
-  { value: "trending", label: "Trending", sub: () => "What traders are looking at right now." },
-  { value: "gainers", label: "Gainers", sub: () => "Biggest price rises in the last 24 hours." },
-  { value: "stocks", label: "Stock Tokens", sub: () => "Tokenized shares and ETFs (NVDA, TSLA, SPY…) trading on PancakeSwap." },
+  { value: "top", label: "Top", sub: (n) => tr("The {n} most traded tokens on PancakeSwap in the last 24 hours.", { n }) },
+  { value: "new", label: "New", sub: (n) => tr("Tokens whose first pool opened in the last {n} days.", { n }) },
+  { value: "trending", label: "Trending", sub: () => tr("What traders are looking at right now.") },
+  { value: "gainers", label: "Gainers", sub: () => tr("Biggest price rises in the last 24 hours.") },
+  { value: "stocks", label: "Stock Tokens", sub: () => tr("Tokenized shares and ETFs (NVDA, TSLA, SPY…) trading on PancakeSwap.") },
 ];
 
 export default function Markets() {
+  const { t } = useT();
   const { protocol } = useAppConfig();
   const [params, setParams] = useSearchParams();
   const tab = (TABS.find((t) => t.value === params.get("tab"))?.value ?? "top") as MarketTab;
   const [swapTo, setSwapTo] = useState<Token | null>(null);
   const navigate = useNavigate();
   const { data, isLoading, error } = useQuery({ queryKey: ["markets", tab], queryFn: () => api.markets(tab), refetchInterval: 60_000 });
-  const t = TABS.find((x) => x.value === tab)!;
+  const meta = TABS.find((x) => x.value === tab)!;
 
   const choose = (r: MarketRow) => {
     setSwapTo({ address: r.address, symbol: r.symbol, name: r.name, decimals: -1, image: r.image });
@@ -37,20 +39,20 @@ export default function Markets() {
 
   return (
     <Page>
-      <PageTitle title="Markets" sub="Live prices from PancakeSwap on BNB Chain. Pools with less than $10k liquidity are left out." />
+      <PageTitle title={t("Markets")} sub={t("Live prices from PancakeSwap on BNB Chain. Pools with less than $10k liquidity are left out.")} />
       <div className="grid gap-6 lg:grid-cols-[1fr_380px]">
         <Card className="min-w-0 p-5">
-          <Segmented value={tab} onChange={(v) => setParams({ tab: v })} options={TABS.map((x) => ({ value: x.value, label: x.label }))} />
-          <p className="mt-3 text-sm text-mute">{t.sub(tab === "new" ? protocol.markets.newTokenDays : protocol.markets.topCount)}</p>
+          <Segmented value={tab} onChange={(v) => setParams({ tab: v })} options={TABS.map((x) => ({ value: x.value, label: t(x.label) }))} />
+          <p className="mt-3 text-sm text-mute">{meta.sub(tab === "new" ? protocol.markets.newTokenDays : protocol.markets.topCount)}</p>
           <div className="mt-4 overflow-x-auto">
             <table className="w-full min-w-[640px] text-sm">
               <thead>
                 <tr className="label border-b border-line text-left">
-                  <th className="py-3 pr-3 font-medium">Token</th>
-                  <th className="px-3 py-3 text-right font-medium">Price</th>
-                  <th className="px-3 py-3 text-right font-medium">24h</th>
-                  <th className="px-3 py-3 text-right font-medium">Volume 24h</th>
-                  <th className="px-3 py-3 text-right font-medium">Liquidity</th>
+                  <th className="py-3 pr-3 font-medium">{t("Token")}</th>
+                  <th className="px-3 py-3 text-right font-medium">{t("Price")}</th>
+                  <th className="px-3 py-3 text-right font-medium">{t("24h")}</th>
+                  <th className="px-3 py-3 text-right font-medium">{t("Volume 24h")}</th>
+                  <th className="px-3 py-3 text-right font-medium">{t("Liquidity")}</th>
                   <th className="py-3 pl-3 text-right font-medium" />
                 </tr>
               </thead>
@@ -71,7 +73,7 @@ export default function Markets() {
                         <div className="min-w-0">
                           <div className="flex items-center gap-2 font-semibold">
                             {r.symbol}
-                            {r.stock && <Badge tone="info">Stock</Badge>}
+                            {r.stock && <Badge tone="info">{t("Stock")}</Badge>}
                             {tab === "new" && <span className="text-xs font-normal text-mute">{ago(r.firstPoolAt)}</span>}
                           </div>
                           <div className="max-w-[200px] truncate text-xs text-mute">{r.name}</div>
@@ -86,15 +88,15 @@ export default function Markets() {
                     <td className="num px-3 py-3 text-right text-fg-2">{usd(r.liquidity, { compact: true })}</td>
                     <td className="py-3 pl-3">
                       <div className="flex justify-end gap-1 opacity-70 group-hover:opacity-100">
-                        <button onClick={(e) => (e.stopPropagation(), choose(r))} className="rounded-lg px-2 py-1 text-xs text-fg-2 hover:bg-panel-3 hover:text-gold-2" title="Swap">
+                        <button onClick={(e) => (e.stopPropagation(), choose(r))} className="rounded-lg px-2 py-1 text-xs text-fg-2 hover:bg-panel-3 hover:text-gold-2" title={t("Swap")}>
                           <ArrowRightLeft className="size-4" />
                         </button>
                         <button
                           onClick={(e) => (e.stopPropagation(), navigate(`/liquidity/new?token=${r.address}`))}
                           className="flex items-center gap-1 rounded-lg px-2 py-1 text-xs text-fg-2 hover:bg-panel-3 hover:text-gold-2"
-                          title="Earn with this token"
+                          title={t("Earn with this token")}
                         >
-                          <Sprout className="size-4" /> Earn
+                          <Sprout className="size-4" /> {t("Earn")}
                         </button>
                       </div>
                     </td>
@@ -102,13 +104,12 @@ export default function Markets() {
                 ))}
               </tbody>
             </table>
-            {error && <p className="py-10 text-center text-sm text-mute">Market data is unavailable right now. It refreshes every minute.</p>}
-            {data && data.rows.length === 0 && <p className="py-10 text-center text-sm text-mute">Nothing here right now.</p>}
+            {error && <p className="py-10 text-center text-sm text-mute">{t("Market data is unavailable right now. It refreshes every minute.")}</p>}
+            {data && data.rows.length === 0 && <p className="py-10 text-center text-sm text-mute">{t("Nothing here right now.")}</p>}
           </div>
           {tab === "stocks" && (
             <p className="mt-4 text-xs leading-relaxed text-mute">
-              Stock Tokens follow their share price, which only moves while the US market is open. Positions with them can wait for the market to open before moving their
-              range (unless the price moves more than 15%).
+              {t("Stock Tokens follow their share price, which only moves while the US market is open. Positions with them can wait for the market to open before moving their range (unless the price moves more than 15%).")}
             </p>
           )}
         </Card>

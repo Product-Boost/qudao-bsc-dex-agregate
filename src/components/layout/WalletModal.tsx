@@ -21,6 +21,7 @@ import {
   walletFor,
   type WalletInfo,
 } from "../../lib/wallets";
+import { useT } from "../../i18n";
 
 type Installed = { connector: Connector; name: string; icon?: string; info?: WalletInfo };
 type View =
@@ -37,6 +38,7 @@ const slide = {
 };
 
 export function WalletModal({ open, onClose }: { open: boolean; onClose: () => void }) {
+  const { t } = useT();
   const connectors = useConnectors();
   const { connectAsync } = useConnect();
   const { isConnected } = useConnection();
@@ -87,7 +89,7 @@ export function WalletModal({ open, onClose }: { open: boolean; onClose: () => v
   });
   if (announced.length === 0 && generic && typeof window !== "undefined" && "ethereum" in window) {
     const info = identifyInjected();
-    installed.push({ connector: generic, name: info?.name ?? "Browser wallet", icon: info?.icon, info });
+    installed.push({ connector: generic, name: info?.name ?? t("Browser wallet"), icon: info?.icon, info });
   }
   const have = new Set(installed.map((i) => i.info?.id));
   const more = WALLETS.filter((w) => !have.has(w.id));
@@ -102,7 +104,7 @@ export function WalletModal({ open, onClose }: { open: boolean; onClose: () => v
       await connectAsync({ connector: item.connector, chainId: chain.id });
     } catch (e) {
       const f = friendlyError(e);
-      setError(f.cancelled ? "You closed the request in your wallet. Try again when you're ready." : f.message);
+      setError(f.cancelled ? t("You closed the request in your wallet. Try again when you're ready.") : f.message);
     }
   }
 
@@ -133,10 +135,10 @@ export function WalletModal({ open, onClose }: { open: boolean; onClose: () => v
 
   const title =
     view.kind === "list" ? (
-      "Connect a wallet"
+      t("Connect a wallet")
     ) : (
       <span className="flex items-center gap-2">
-        <button onClick={back} aria-label="Back" className="-ml-1 rounded-lg p-1 text-mute transition-colors hover:bg-panel-3 hover:text-fg">
+        <button onClick={back} aria-label={t("Back")} className="-ml-1 rounded-lg p-1 text-mute transition-colors hover:bg-panel-3 hover:text-fg">
           <ArrowLeft className="size-5" />
         </button>
         {view.kind === "wallet" ? view.wallet.name : view.kind === "connecting" ? view.item.name : view.wallet?.name ?? "WalletConnect"}
@@ -148,15 +150,15 @@ export function WalletModal({ open, onClose }: { open: boolean; onClose: () => v
       <AnimatePresence mode="wait" initial={false}>
         {view.kind === "list" && (
           <motion.div key="list" {...slide} className="flex flex-col gap-5">
-            <Section label="Connect">
+            <Section label={t("Connect")}>
               {installed.map((item, i) => (
-                <Row key={item.connector.uid} i={i} icon={item.icon} name={item.name} tag="Installed" installed onClick={() => connectInstalled(item)} />
+                <Row key={item.connector.uid} i={i} icon={item.icon} name={item.name} tag={t("Installed")} installed onClick={() => connectInstalled(item)} />
               ))}
-              {mock && <Row i={installed.length} name="Dev wallet" tag="Local fork" onClick={() => connectInstalled({ connector: mock, name: "Dev wallet" })} />}
+              {mock && <Row i={installed.length} name={t("Dev wallet")} tag={t("Local fork")} onClick={() => connectInstalled({ connector: mock, name: t("Dev wallet") })} />}
               <Row
                 i={installed.length + (mock ? 1 : 0)}
                 icon={WALLETCONNECT_ICON}
-                name="WalletConnect (phone wallet)"
+                name={t("WalletConnect (phone wallet)")}
                 onClick={() => {
                   setView({ kind: "qr" });
                   void startWalletConnect();
@@ -165,16 +167,16 @@ export function WalletModal({ open, onClose }: { open: boolean; onClose: () => v
             </Section>
 
             {more.length > 0 && (
-              <Section label="Popular wallets">
+              <Section label={t("Popular wallets")}>
                 {more.map((w, i) => (
-                  <Row key={w.id} i={i + 2} icon={w.icon} name={w.name} tag={tag(w)} onClick={() => pick(w)} />
+                  <Row key={w.id} i={i + 2} icon={w.icon} name={w.name} tag={t(tag(w))} onClick={() => pick(w)} />
                 ))}
               </Section>
             )}
 
             <div className="space-y-3 text-sm leading-relaxed text-mute">
-              {installed.length === 0 && <p>No wallet found in this browser. Install one of the wallets above, or connect a phone wallet with WalletConnect.</p>}
-              <p>Qudao never sees your private key or recovery phrase. Nothing happens without your approval in your own wallet.</p>
+              {installed.length === 0 && <p>{t("No wallet found in this browser. Install one of the wallets above, or connect a phone wallet with WalletConnect.")}</p>}
+              <p>{t("Qudao never sees your private key or recovery phrase. Nothing happens without your approval in your own wallet.")}</p>
             </div>
           </motion.div>
         )}
@@ -183,12 +185,12 @@ export function WalletModal({ open, onClose }: { open: boolean; onClose: () => v
           <motion.div key="connecting" {...slide} className="flex flex-col items-center gap-4 py-4 text-center">
             <Pulse icon={view.item.icon} failed={!!error} />
             <div>
-              <div className="font-semibold">{error ? "Not connected" : `Opening ${view.item.name}…`}</div>
-              <p className="mt-1 text-sm text-mute">{error ?? "Confirm the connection in your wallet. If nothing opened, click its icon in your browser's toolbar."}</p>
+              <div className="font-semibold">{error ? t("Not connected") : t("Opening {name}…", { name: view.item.name })}</div>
+              <p className="mt-1 text-sm text-mute">{error ?? t("Confirm the connection in your wallet. If nothing opened, click its icon in your browser's toolbar.")}</p>
             </div>
             {error && (
               <button onClick={() => connectInstalled(view.item)} className="inline-flex items-center gap-2 rounded-xl bg-gold px-4 py-2 text-sm font-semibold text-gold-ink transition-transform active:scale-[0.97]">
-                <RefreshCw className="size-4" /> Try again
+                <RefreshCw className="size-4" /> {t("Try again")}
               </button>
             )}
           </motion.div>
@@ -211,21 +213,21 @@ export function WalletModal({ open, onClose }: { open: boolean; onClose: () => v
             ) : mobile ? (
               <>
                 <img src={WALLETCONNECT_ICON} alt="" className="size-16 rounded-2xl" />
-                <p className="text-sm text-fg-2">Pick a wallet app on this phone to connect with.</p>
+                <p className="text-sm text-fg-2">{t("Pick a wallet app on this phone to connect with.")}</p>
                 {uri ? (
                   <ActionLink href={uri} primary external={false}>
-                    <Smartphone className="size-4" /> Open a wallet app
+                    <Smartphone className="size-4" /> {t("Open a wallet app")}
                   </ActionLink>
                 ) : (
                   <div className="skeleton h-11 w-full rounded-xl" />
                 )}
-                {uri && <CopyButton text={uri} label="Copy connection link" />}
+                {uri && <CopyButton text={uri} label={t("Copy connection link")} />}
               </>
             ) : (
               <>
                 <QrBlock uri={uri} logo={WALLETCONNECT_ICON} />
-                <p className="text-sm text-fg-2">Scan with any wallet app that supports WalletConnect on BNB Chain.</p>
-                {uri && <CopyButton text={uri} label="Copy link" />}
+                <p className="text-sm text-fg-2">{t("Scan with any wallet app that supports WalletConnect on BNB Chain.")}</p>
+                {uri && <CopyButton text={uri} label={t("Copy link")} />}
               </>
             )}
             {error && <ErrorNote>{error}</ErrorNote>}
@@ -239,6 +241,7 @@ export function WalletModal({ open, onClose }: { open: boolean; onClose: () => v
 // ------------------------------------------------------------------ wallet detail
 
 function DesktopWallet({ wallet, wcReady, uri, error }: { wallet: WalletInfo; wcReady: boolean; uri: string | null; error: string | null }) {
+  const { t } = useT();
   const ext = extensionLink(wallet);
   const canScan = wcReady && !!wallet.scan;
   const phone = wallet.kind === "phone";
@@ -249,8 +252,8 @@ function DesktopWallet({ wallet, wcReady, uri, error }: { wallet: WalletInfo; wc
           <div className="flex items-center gap-4 rounded-2xl border border-line bg-panel-2 p-4">
             <img src={wallet.icon} alt="" className="size-12 rounded-2xl" />
             <div className="min-w-0 flex-1">
-              <div className="font-semibold">{wallet.name} isn't installed here</div>
-              <div className="text-sm text-mute">Add the browser extension, then reload this page.</div>
+              <div className="font-semibold">{t("{name} isn't installed here", { name: wallet.name })}</div>
+              <div className="text-sm text-mute">{t("Add the browser extension, then reload this page.")}</div>
             </div>
           </div>
           <div className="flex gap-2">
@@ -261,7 +264,7 @@ function DesktopWallet({ wallet, wcReady, uri, error }: { wallet: WalletInfo; wc
               onClick={() => window.location.reload()}
               className="inline-flex flex-1 items-center justify-center gap-2 rounded-xl border border-line-2 px-4 py-2.5 text-sm font-semibold transition-colors hover:border-gold/60 hover:text-gold-2"
             >
-              <RefreshCw className="size-4" /> I've installed it
+              <RefreshCw className="size-4" /> {t("I've installed it")}
             </button>
           </div>
         </>
@@ -269,9 +272,9 @@ function DesktopWallet({ wallet, wcReady, uri, error }: { wallet: WalletInfo; wc
 
       {canScan ? (
         <div className={`flex flex-col items-center gap-3 text-center ${phone ? "" : "border-t border-line pt-5"}`}>
-          <div className="label">{phone ? `Scan with ${wallet.name}` : `Or use ${wallet.name} on your phone`}</div>
+          <div className="label">{phone ? t("Scan with {name}", { name: wallet.name }) : t("Or use {name} on your phone", { name: wallet.name })}</div>
           <QrBlock uri={uri} logo={wallet.icon} size={phone ? 232 : 208} />
-          <p className="max-w-xs text-xs text-mute">Open {wallet.name} on your phone, tap its scanner and point it at this code.</p>
+          <p className="max-w-xs text-xs text-mute">{t("Open {name} on your phone, tap its scanner and point it at this code.", { name: wallet.name })}</p>
           {error && <ErrorNote>{error}</ErrorNote>}
         </div>
       ) : (
@@ -283,11 +286,11 @@ function DesktopWallet({ wallet, wcReady, uri, error }: { wallet: WalletInfo; wc
         )
       )}
 
-      {wallet.app && (phone || !canScan) && <StoreLinks wallet={wallet} label={phone ? `Don't have ${wallet.name}?` : `Get the ${wallet.name} app`} />}
+      {wallet.app && (phone || !canScan) && <StoreLinks wallet={wallet} label={phone ? t("Don't have {name}?", { name: wallet.name }) : t("Get the {name} app", { name: wallet.name })} />}
 
       {phone && ext && (
         <p className="text-center text-xs text-mute">
-          Prefer the browser extension?{" "}
+          {t("Prefer the browser extension?")}{" "}
           <a href={ext.href} target="_blank" rel="noreferrer" className="text-gold-2 hover:underline">
             {ext.label}
           </a>
@@ -299,12 +302,13 @@ function DesktopWallet({ wallet, wcReady, uri, error }: { wallet: WalletInfo; wc
 
 /** Why there's no QR code: WalletConnect isn't set up, or the page isn't https. */
 function WalletConnectOff({ configured, quiet }: { configured: boolean; quiet?: boolean }) {
+  const { t } = useT();
   const insecure = typeof window !== "undefined" && !window.isSecureContext;
   return (
     <div className={`w-full rounded-2xl border border-line bg-panel-2 p-4 text-left text-sm text-fg-2 ${quiet ? "text-center" : ""}`}>
       {insecure && configured
-        ? "Phone wallets connect over a secure page only. Open Qudao on its https address to scan a code."
-        : "Connecting phone wallets by QR code isn't switched on for this site yet."}
+        ? t("Phone wallets connect over a secure page only. Open Qudao on its https address to scan a code.")
+        : t("Connecting phone wallets by QR code isn't switched on for this site yet.")}
       {import.meta.env.DEV && !configured && (
         <div className="mt-2 text-xs text-mute">
           Dev note: set <span className="font-mono">VITE_WALLETCONNECT_PROJECT_ID</span> (free at dashboard.reown.com). It also needs https or localhost.
@@ -327,6 +331,7 @@ function MobileWallet({
   error: string | null;
   onWalletConnect: () => void;
 }) {
+  const { t } = useT();
   const here = typeof location !== "undefined" ? location.href : "";
   const store = appLink(wallet);
   const canWc = wcReady && !!wallet.wc;
@@ -335,7 +340,7 @@ function MobileWallet({
       <div className="flex flex-col items-center gap-3 py-2 text-center">
         <img src={wallet.icon} alt="" className="size-16 rounded-2xl shadow-lg" />
         <p className="max-w-xs text-sm text-mute">
-          {canWc || wallet.dapp ? `Connect with the ${wallet.name} app, or get it first.` : `Open Qudao in ${wallet.name}'s browser to connect.`}
+          {canWc || wallet.dapp ? t("Connect with the {name} app, or get it first.", { name: wallet.name }) : t("Open Qudao in {name}'s browser to connect.", { name: wallet.name })}
         </p>
       </div>
       {canWc && (
@@ -343,28 +348,28 @@ function MobileWallet({
           onClick={onWalletConnect}
           className="inline-flex items-center justify-center gap-2 rounded-xl bg-gold px-4 py-3 text-sm font-semibold text-gold-ink transition-transform active:scale-[0.97]"
         >
-          <Smartphone className="size-4" /> Connect with {wallet.name}
+          <Smartphone className="size-4" /> {t("Connect with {name}", { name: wallet.name })}
         </button>
       )}
       {canWc && uri && wallet.wc && (
         <a href={wallet.wc(uri, isAndroid())} className="text-center text-xs text-gold-2 underline">
-          Didn't open? Tap here
+          {t("Didn't open? Tap here")}
         </a>
       )}
       {wallet.dapp && (
         <ActionLink href={wallet.dapp(here)} primary={!canWc} external={false}>
-          <ArrowUpRight className="size-4" /> Open Qudao in {wallet.name}
+          <ArrowUpRight className="size-4" /> {t("Open Qudao in {name}", { name: wallet.name })}
         </ActionLink>
       )}
       {store && (
         <ActionLink href={store}>
-          <Download className="size-4" /> Get {wallet.name}
+          <Download className="size-4" /> {t("Get {name}", { name: wallet.name })}
         </ActionLink>
       )}
       <div className="mt-2 rounded-2xl border border-line bg-panel-2 p-3 text-xs leading-relaxed text-mute">
-        Already have it? Copy this page's link and paste it into {wallet.name}'s built-in browser.
+        {t("Already have it? Copy this page's link and paste it into {name}'s built-in browser.", { name: wallet.name })}
         <div className="mt-2">
-          <CopyButton text={here} label="Copy link" />
+          <CopyButton text={here} label={t("Copy link")} />
         </div>
       </div>
       {error && <ErrorNote>{error}</ErrorNote>}
@@ -373,6 +378,7 @@ function MobileWallet({
 }
 
 function StoreLinks({ wallet, label }: { wallet: WalletInfo; label: string }) {
+  const { t } = useT();
   const app = wallet.app!;
   return (
     <div className="flex flex-col gap-2 border-t border-line pt-5">
@@ -380,7 +386,7 @@ function StoreLinks({ wallet, label }: { wallet: WalletInfo; label: string }) {
       <div className="flex flex-wrap gap-2">
         {app.ios && <ActionLink href={app.ios}>App Store</ActionLink>}
         {app.android && <ActionLink href={app.android}>Google Play</ActionLink>}
-        {(!app.ios || !app.android) && <ActionLink href={app.home}>{app.ios || app.android ? "Website" : "Download"}</ActionLink>}
+        {(!app.ios || !app.android) && <ActionLink href={app.home}>{app.ios || app.android ? t("Website") : t("Download")}</ActionLink>}
       </div>
     </div>
   );
@@ -443,6 +449,7 @@ function ActionLink({ href, children, primary, external = true }: { href: string
 }
 
 function QrBlock({ uri, logo, size = 232 }: { uri: string | null; logo?: string; size?: number }) {
+  const { t } = useT();
   return (
     <div className="relative" style={{ width: size, height: size }}>
       <AnimatePresence mode="wait">
@@ -451,7 +458,7 @@ function QrBlock({ uri, logo, size = 232 }: { uri: string | null; logo?: string;
             <QrCode value={uri} logo={logo} size={size} />
           </motion.div>
         ) : (
-          <motion.div key="wait" exit={{ opacity: 0 }} className="skeleton size-full rounded-2xl" aria-label="Preparing QR code" />
+          <motion.div key="wait" exit={{ opacity: 0 }} className="skeleton size-full rounded-2xl" aria-label={t("Preparing QR code")} />
         )}
       </AnimatePresence>
     </div>
@@ -487,6 +494,7 @@ function Pulse({ icon, failed }: { icon?: string; failed: boolean }) {
 }
 
 function CopyButton({ text, label }: { text: string; label: string }) {
+  const { t } = useT();
   const [done, setDone] = useState(false);
   return (
     <button
@@ -497,7 +505,7 @@ function CopyButton({ text, label }: { text: string; label: string }) {
       }}
       className="inline-flex items-center gap-1.5 rounded-lg border border-line-2 px-3 py-1.5 text-xs font-medium text-fg-2 transition-colors hover:border-gold/60 hover:text-gold-2"
     >
-      {done ? <Check className="size-3.5 text-up" /> : <Copy className="size-3.5" />} {done ? "Copied" : label}
+      {done ? <Check className="size-3.5 text-up" /> : <Copy className="size-3.5" />} {done ? t("Copied") : label}
     </button>
   );
 }

@@ -6,6 +6,7 @@ import { TokenIcon } from "./TokenIcon";
 import { TokenPicker } from "./TokenPicker";
 import { useTokenBalance, type Token } from "../hooks/tokens";
 import { amount, usd } from "../lib/format";
+import { useT } from "../i18n";
 
 export function AmountInput({
   label,
@@ -31,6 +32,7 @@ export function AmountInput({
   /** Native BNB kept back from "Max" for network fees. */
   maxReserve?: bigint;
 }) {
+  const { t } = useT();
   const [pick, setPick] = useState(false);
   const bal = useTokenBalance(token);
   const n = Number(value);
@@ -41,7 +43,7 @@ export function AmountInput({
         <span>{label}</span>
         {token && bal !== undefined && (
           <span>
-            Balance <span className="num text-fg-2">{amount(bal, token.decimals)}</span>
+            {t("Balance")} <span className="num text-fg-2">{amount(bal, token.decimals)}</span>
             {onChange && bal > 0n && (
               <button
                 className="ml-2 font-semibold text-gold hover:text-gold-2"
@@ -50,7 +52,7 @@ export function AmountInput({
                   onChange(formatUnits(max, token.decimals));
                 }}
               >
-                Max
+                {t("Max")}
               </button>
             )}
           </span>
@@ -79,12 +81,12 @@ export function AmountInput({
               {token.symbol}
             </>
           ) : (
-            <span className="px-2 text-sm text-gold">Select</span>
+            <span className="px-2 text-sm text-gold">{t("Select")}</span>
           )}
           {onToken && <ChevronDown className="size-4 text-mute" />}
         </button>
       </div>
-      <div className="mt-1 text-xs text-mute">{usdPrice && n > 0 ? usd(n * usdPrice) : over ? <span className="text-down">More than your balance</span> : " "}</div>
+      <div className="mt-1 text-xs text-mute">{usdPrice && n > 0 ? usd(n * usdPrice) : over ? <span className="text-down">{t("More than your balance")}</span> : " "}</div>
       {onToken && <TokenPicker open={pick} onClose={() => setPick(false)} onPick={onToken} exclude={exclude} allowNative={allowNative} />}
     </div>
   );

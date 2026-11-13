@@ -10,6 +10,7 @@ import { Badge } from "./ui";
 import { api, type TokenCheck } from "../lib/api";
 import { useBaseTokens, useTokenBalance, useTokenMeta, type Token } from "../hooks/tokens";
 import { amount } from "../lib/format";
+import { useT } from "../i18n";
 
 function useDebounced<T>(v: T, ms = 300) {
   const [d, setD] = useState(v);
@@ -21,26 +22,27 @@ function useDebounced<T>(v: T, ms = 300) {
 }
 
 export function CheckBadge({ check }: { check?: TokenCheck | null }) {
+  const { t } = useT();
   if (!check) return null;
   if (check.verdict === "ok")
     return (
       <Badge tone="up">
-        <ShieldCheck className="size-3" /> Checked
+        <ShieldCheck className="size-3" /> {t("Checked")}
       </Badge>
     );
   if (check.verdict === "warn")
     return (
       <Badge tone="warn">
-        <ShieldAlert className="size-3" /> Caution
+        <ShieldAlert className="size-3" /> {t("Caution")}
       </Badge>
     );
   if (check.verdict === "refuse")
     return (
       <Badge tone="down">
-        <ShieldX className="size-3" /> Not supported
+        <ShieldX className="size-3" /> {t("Not supported")}
       </Badge>
     );
-  return <Badge>Unknown</Badge>;
+  return <Badge>{t("Unknown")}</Badge>;
 }
 
 function Row({ token, onPick, disabled, balance = true }: { token: Token; onPick: (t: Token) => void; disabled?: boolean; balance?: boolean }) {
@@ -74,6 +76,7 @@ export function TokenPicker({
   exclude?: string[];
   allowNative?: boolean;
 }) {
+  const { t: tr } = useT();
   const [q, setQ] = useState("");
   const dq = useDebounced(q.trim());
   const base = useBaseTokens().filter((t) => allowNative || t.symbol !== "BNB");
@@ -99,10 +102,10 @@ export function TokenPicker({
   const remote = (search?.tokens ?? []).filter((t) => !base.some((b) => b.address.toLowerCase() === t.address.toLowerCase()));
 
   return (
-    <Modal open={open} onClose={onClose} title="Choose a token">
+    <Modal open={open} onClose={onClose} title={tr("Choose a token")}>
       <label className="flex items-center gap-2 rounded-xl border border-line bg-ink-2 px-3 focus-within:border-gold/60">
         <Search className="size-4 text-mute" />
-        <input autoFocus value={q} onChange={(e) => setQ(e.target.value)} placeholder="Name, symbol or address (0x…)" className="h-11 flex-1 bg-transparent text-sm outline-none placeholder:text-dim" />
+        <input autoFocus value={q} onChange={(e) => setQ(e.target.value)} placeholder={tr("Name, symbol or address (0x…)")} className="h-11 flex-1 bg-transparent text-sm outline-none placeholder:text-dim" />
       </label>
 
       <div className="mt-4 max-h-[52dvh] overflow-y-auto">
@@ -121,7 +124,7 @@ export function TokenPicker({
                 </div>
               </>
             ) : (
-              <div className="px-3 py-3 text-sm text-mute">Looking up this address…</div>
+              <div className="px-3 py-3 text-sm text-mute">{tr("Looking up this address…")}</div>
             )}
           </div>
         )}
@@ -130,11 +133,11 @@ export function TokenPicker({
             {localHits.map((t) => (
               <Row key={t.address} token={t} onPick={pick} disabled={ex.has(t.address.toLowerCase())} />
             ))}
-            {remote.length > 0 && <div className="label mt-3 mb-1 px-3">On PancakeSwap</div>}
+            {remote.length > 0 && <div className="label mt-3 mb-1 px-3">{tr("On PancakeSwap")}</div>}
             {remote.map((t) => (
               <Row key={t.address} token={{ ...t, decimals: -1 }} balance={false} onPick={pick} disabled={ex.has(t.address.toLowerCase())} />
             ))}
-            {dq.length >= 2 && !isFetching && localHits.length === 0 && remote.length === 0 && <p className="px-3 py-6 text-center text-sm text-mute">No token found. Paste its address instead.</p>}
+            {dq.length >= 2 && !isFetching && localHits.length === 0 && remote.length === 0 && <p className="px-3 py-6 text-center text-sm text-mute">{tr("No token found. Paste its address instead.")}</p>}
           </>
         )}
       </div>

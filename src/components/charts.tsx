@@ -1,6 +1,8 @@
 // Dependency-free SVG charts: sparkline, stacked bars, area line, liquidity-by-price with a draggable range,
 // a backtest band chart and the small range bar used on position cards.
 import { useMemo, useRef, useState, type PointerEvent as RPointerEvent, type ReactNode } from "react";
+import { localeTag } from "../i18n/locale";
+import { useT } from "../i18n";
 
 const W = 600;
 
@@ -35,6 +37,7 @@ export function StackedBars({
   format: (n: number) => string;
   height?: number;
 }) {
+  const { t } = useT();
   const [hover, setHover] = useState<number | null>(null);
   const totals = data.map((d) => series.reduce((s, x) => s + (d.values[x.key] ?? 0), 0));
   const max = Math.max(...totals, 1e-18);
@@ -43,7 +46,7 @@ export function StackedBars({
   const bw = data.length ? (W - gap * (data.length + 1)) / data.length : 0;
   return (
     <div className="relative">
-      <svg viewBox={`0 0 ${W} ${H + 24}`} className="w-full" role="img" aria-label="Bar chart">
+      <svg viewBox={`0 0 ${W} ${H + 24}`} className="w-full" role="img" aria-label={t("Bar chart")}>
         {[0.25, 0.5, 0.75, 1].map((f) => (
           <line key={f} x1={0} x2={W} y1={H - f * H + 2} y2={H - f * H + 2} stroke="var(--color-line)" strokeDasharray="3 4" />
         ))}
@@ -74,7 +77,7 @@ export function StackedBars({
               {s.label}: <span className="num text-fg">{format(data[hover].values[s.key] ?? 0)}</span>
             </div>
           ))}
-          <div className="mt-1 border-t border-line pt-1 text-fg">Total: {format(totals[hover])}</div>
+          <div className="mt-1 border-t border-line pt-1 text-fg">{t("Total:")} {format(totals[hover])}</div>
         </div>
       )}
       <div className="mt-2 flex flex-wrap gap-4 text-xs text-fg-2">
@@ -103,6 +106,7 @@ export function AreaChart({
   color?: string;
   bands?: { lo: number; hi: number }[]; // same length as points: a shaded band (e.g. a backtested range)
 }) {
+  const { t } = useT();
   const [hover, setHover] = useState<number | null>(null);
   const ref = useRef<SVGSVGElement>(null);
   const H = height;
@@ -113,7 +117,7 @@ export function AreaChart({
     const pad = (hi - lo) * 0.08 || Math.abs(hi) * 0.05 || 1;
     return { min: lo - pad, max: hi + pad };
   }, [points, bands]);
-  if (points.length < 2) return <div style={{ height }} className="grid place-items-center text-sm text-mute">Not enough history yet</div>;
+  if (points.length < 2) return <div style={{ height }} className="grid place-items-center text-sm text-mute">{t("Not enough history yet")}</div>;
   const x = (i: number) => (i / (points.length - 1)) * W;
   const y = (v: number) => H - ((v - min) / (max - min)) * H;
   const line = points.map((p, i) => `${i ? "L" : "M"}${x(i).toFixed(1)},${y(p.v).toFixed(1)}`).join("");
@@ -151,7 +155,7 @@ export function AreaChart({
               range {format(bands[hover!].lo)} – {format(bands[hover!].hi)}
             </div>
           )}
-          <div className="text-mute">{new Date(h.t).toLocaleString("en-US", { month: "short", day: "numeric", hour: "2-digit" })}</div>
+          <div className="text-mute">{new Date(h.t).toLocaleString(localeTag(), { month: "short", day: "numeric", hour: "2-digit" })}</div>
         </div>
       )}
     </div>
@@ -180,6 +184,7 @@ export function LiquidityChart({
   height?: number;
 }) {
   const ref = useRef<SVGSVGElement>(null);
+  const { t } = useT();
   const [drag, setDrag] = useState<"low" | "high" | null>(null);
   const H = height;
   const sorted = [...bars].sort((a, b) => a.lo - b.lo);
@@ -227,7 +232,7 @@ export function LiquidityChart({
       </svg>
       <div className="num mt-2 flex justify-between text-xs text-mute">
         <span>{format(minP)}</span>
-        <span className="text-fg">now {format(current)}</span>
+        <span className="text-fg">{t("now {price}", { price: format(current) })}</span>
         <span>{format(maxP)}</span>
       </div>
     </div>

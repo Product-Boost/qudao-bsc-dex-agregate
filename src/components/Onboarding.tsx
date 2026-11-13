@@ -4,6 +4,7 @@ import { useLocation } from "react-router-dom";
 import { Coins, MoveHorizontal, ShieldCheck, Sprout } from "lucide-react";
 import { Modal } from "./Modal";
 import { Button } from "./ui";
+import { useT } from "../i18n";
 
 const KEY = "qudao:onboarded:v1";
 
@@ -50,24 +51,25 @@ export function Onboarding() {
     }
     setSeen(true);
   };
+  const { t } = useT();
   if (seen || !APP_PATHS.test(loc.pathname)) return null;
   const s = SLIDES[i];
   return (
-    <Modal open onClose={close} title="Welcome to Qudao">
+    <Modal open onClose={close} title={t("Welcome to Qudao")}>
       <div className="text-center">
         <div className="mx-auto grid size-14 place-items-center rounded-2xl bg-gold/12 text-gold">{s.icon}</div>
-        <h3 className="mt-5 text-xl font-semibold">{s.title}</h3>
-        <p className="mt-2 text-sm leading-relaxed text-fg-2">{s.body}</p>
+        <h3 className="mt-5 text-xl font-semibold">{t(s.title)}</h3>
+        <p className="mt-2 text-sm leading-relaxed text-fg-2">{t(s.body)}</p>
         <div className="mt-6 flex justify-center gap-1.5">
           {SLIDES.map((_, j) => (
-            <button key={j} aria-label={`Slide ${j + 1}`} onClick={() => setI(j)} className={`h-1.5 rounded-full transition-all ${j === i ? "w-6 bg-gold" : "w-1.5 bg-line-2"}`} />
+            <button key={j} aria-label={t("Slide {n}", { n: j + 1 })} onClick={() => setI(j)} className={`h-1.5 rounded-full transition-all ${j === i ? "w-6 bg-gold" : "w-1.5 bg-line-2"}`} />
           ))}
         </div>
         <div className="mt-6 flex justify-between gap-3">
           <Button variant="plain" onClick={close}>
-            Skip
+            {t("Skip")}
           </Button>
-          <Button onClick={() => (i < SLIDES.length - 1 ? setI(i + 1) : close())}>{i < SLIDES.length - 1 ? "Next" : "Get started"}</Button>
+          <Button onClick={() => (i < SLIDES.length - 1 ? setI(i + 1) : close())}>{i < SLIDES.length - 1 ? t("Next") : t("Get started")}</Button>
         </div>
       </div>
     </Modal>

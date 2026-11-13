@@ -4,6 +4,7 @@ import { createPortal } from "react-dom";
 import { AnimatePresence, motion } from "motion/react";
 import { X } from "lucide-react";
 import { EASE } from "../lib/ease";
+import { useT } from "../i18n";
 
 const fade = { initial: { opacity: 0 }, animate: { opacity: 1 }, exit: { opacity: 0 }, transition: { duration: 0.25 } };
 
@@ -34,6 +35,7 @@ export function Modal({
   children: ReactNode;
   wide?: boolean;
 }) {
+  const { t } = useT();
   useOverlay(open, onClose);
   return createPortal(
     <AnimatePresence>
@@ -51,7 +53,7 @@ export function Modal({
           >
             <div className="mb-5 flex items-center justify-between gap-4">
               <h2 className="text-lg font-semibold">{title}</h2>
-              <button onClick={onClose} aria-label="Close" className="rounded-lg p-1 text-mute transition-colors hover:bg-panel-3 hover:text-fg">
+              <button onClick={onClose} aria-label={t("Close")} className="rounded-lg p-1 text-mute transition-colors hover:bg-panel-3 hover:text-fg">
                 <X className="size-5" />
               </button>
             </div>
@@ -65,6 +67,7 @@ export function Modal({
 }
 
 export function Drawer({ open, onClose, title, children }: { open: boolean; onClose: () => void; title?: ReactNode; children: ReactNode }) {
+  const { t } = useT();
   useOverlay(open, onClose);
   return createPortal(
     <AnimatePresence>
@@ -80,7 +83,7 @@ export function Drawer({ open, onClose, title, children }: { open: boolean; onCl
           >
             <div className="flex items-center justify-between gap-4 border-b border-line px-6 py-4">
               <div className="min-w-0 text-lg font-semibold">{title}</div>
-              <button onClick={onClose} aria-label="Close" className="rounded-lg p-1 text-mute transition-colors hover:bg-panel-3 hover:text-fg">
+              <button onClick={onClose} aria-label={t("Close")} className="rounded-lg p-1 text-mute transition-colors hover:bg-panel-3 hover:text-fg">
                 <X className="size-5" />
               </button>
             </div>

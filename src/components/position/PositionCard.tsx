@@ -9,13 +9,16 @@ import { RangeBar } from "../charts";
 import { PairIcon } from "../TokenIcon";
 import { Badge } from "../ui";
 import { useTokenImages } from "../../hooks/tokens";
+import { useT } from "../../i18n";
 
 export function StatusBadge({ p }: { p: Position }) {
-  if (p.closed) return <Badge>Closed</Badge>;
-  return p.inRange ? <Badge tone="up">Earning</Badge> : <Badge tone="warn">Out of range</Badge>;
+  const { t } = useT();
+  if (p.closed) return <Badge>{t("Closed")}</Badge>;
+  return p.inRange ? <Badge tone="up">{t("Earning")}</Badge> : <Badge tone="warn">{t("Out of range")}</Badge>;
 }
 
 export function PositionCard({ p, onOpen }: { p: Position; onOpen: () => void }) {
+  const { t } = useT();
   const images = useTokenImages([p.token0, p.token1]);
   const v = viewFor(p);
   const [low, high] = rangePrices(v, p.tickLower, p.tickUpper);
@@ -32,8 +35,8 @@ export function PositionCard({ p, onOpen }: { p: Position; onOpen: () => void })
               {v.base} / {v.quote}
             </div>
             <div className="flex items-center gap-1.5 text-xs text-mute">
-              {pct(p.fee / 10_000, { digits: 2 })} · {strategyOf(p.settings.strategy).short}
-              {p.staked && <Sprout className="size-3.5 text-gold" aria-label="Farming CAKE" />}
+              {pct(p.fee / 10_000, { digits: 2 })} · {t(strategyOf(p.settings.strategy).short)}
+              {p.staked && <Sprout className="size-3.5 text-gold" aria-label={t("Farming CAKE")} />}
             </div>
           </div>
         </div>
@@ -41,15 +44,15 @@ export function PositionCard({ p, onOpen }: { p: Position; onOpen: () => void })
       </div>
       <div className="mt-5 grid grid-cols-3 gap-3">
         <div>
-          <div className="label">Value</div>
+          <div className="label">{t("Value")}</div>
           <div className="num mt-1 text-lg font-semibold">{usd(p.valueUsd)}</div>
         </div>
         <div>
-          <div className="label">To claim</div>
+          <div className="label">{t("To claim")}</div>
           <div className="num mt-1 text-lg font-semibold text-up">{usd(p.feesUsd)}</div>
         </div>
         <div>
-          <div className="label">APR</div>
+          <div className="label">{t("APR")}</div>
           <div className="num mt-1 text-lg font-semibold text-gold-2">{p.aprPct !== undefined ? pct(p.aprPct) : "—"}</div>
         </div>
       </div>
@@ -58,14 +61,14 @@ export function PositionCard({ p, onOpen }: { p: Position; onOpen: () => void })
           <RangeBar low={low} high={high} current={current} />
           <div className="num mt-2 flex justify-between text-xs text-mute">
             <span>{sig(low)}</span>
-            <span className="text-fg-2">now {sig(current)}</span>
+            <span className="text-fg-2">{t("now {price}", { price: sig(current) })}</span>
             <span>{sig(high)}</span>
           </div>
         </div>
       )}
       {p.pnlUsd !== undefined && (
         <div className="mt-4 flex justify-between border-t border-line pt-3 text-xs">
-          <span className="text-mute">Profit / loss</span>
+          <span className="text-mute">{t("Profit / loss")}</span>
           <span className={`num font-medium ${p.pnlUsd >= 0 ? "text-up" : "text-down"}`}>{usd(p.pnlUsd, { sign: true })}</span>
         </div>
       )}

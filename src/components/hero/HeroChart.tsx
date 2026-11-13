@@ -6,6 +6,7 @@ import { ArrowDownRight, ArrowUpRight, Check, CircleDot, RefreshCw } from "lucid
 import { EASE } from "../../lib/ease";
 import { AREA_D, BANDS, H, HALF, LINE_D, priceAt, W, X0, X1, yAt, type Band } from "./data";
 import { useHead, useStage } from "./useDraw";
+import { useT } from "../../i18n";
 
 const FEES_TOTAL = 48.2; // illustrative fees over the whole story
 const BEAM = 70;
@@ -21,6 +22,7 @@ const EVENTS = BANDS.map((b) => ({
 }));
 
 export function HeroChart({ play = true, run = 0 }: { play?: boolean; run?: number }) {
+  const { t } = useT();
   const ids = useId().replace(/[^a-zA-Z0-9_-]/g, "");
   const head = useHead(play, run, { duration: 5, delay: 0.5 });
   const { stage, done, moving } = useStage(head);
@@ -31,7 +33,7 @@ export function HeroChart({ play = true, run = 0 }: { play?: boolean; run?: numb
   return (
     <>
       <div className="flex items-center justify-between text-sm">
-        <span className="font-semibold">BNB / USDT · managed range</span>
+        <span className="font-semibold">{t("BNB / USDT · managed range")}</span>
         <span className="relative h-5 min-w-28 text-right text-xs">
           <Status moving={moving} />
         </span>
@@ -114,8 +116,8 @@ export function HeroChart({ play = true, run = 0 }: { play?: boolean; run?: numb
                 className={`rounded-xl border px-2 py-1.5 transition-colors duration-500 ${on && !settled ? "border-gold/50 bg-gold/[0.06]" : "border-line bg-panel-2"}`}
               >
                 <div className={`flex items-center gap-1 text-[10px] font-semibold ${i === 0 ? "text-up" : "text-gold-2"}`}>
-                  {e.icon} <span className="sm:hidden">{e.short}</span>
-                  <span className="hidden sm:inline">{e.title}</span>
+                  {e.icon} <span className="sm:hidden">{t(e.short)}</span>
+                  <span className="hidden sm:inline">{t(e.title)}</span>
                 </div>
                 <div className="num mt-0.5 hidden truncate text-[10px] text-fg-2 sm:block">{e.range}</div>
                 <div className="num mt-0.5 flex items-center gap-1 text-[10px] text-up">
@@ -126,12 +128,13 @@ export function HeroChart({ play = true, run = 0 }: { play?: boolean; run?: numb
           })}
         </div>
       </div>
-      <p className="mt-3 text-xs text-mute">Illustration: each green box is the range; when the price leaves it, Qudao moves it.</p>
+      <p className="mt-3 text-xs text-mute">{t("Illustration: each green box is the range; when the price leaves it, Qudao moves it.")}</p>
     </>
   );
 }
 
 function Status({ moving }: { moving: boolean }): ReactNode {
+  const { t } = useT();
   return (
     <AnimatePresence mode="wait" initial={false}>
       <motion.span
@@ -143,7 +146,7 @@ function Status({ moving }: { moving: boolean }): ReactNode {
         className={`absolute right-0 inline-flex items-center gap-1.5 ${moving ? "text-gold-2" : "text-up"}`}
       >
         {moving ? <RefreshCw className="size-3 animate-spin" /> : <span className="size-1.5 animate-pulse rounded-full bg-up" />}
-        {moving ? "moving range" : "earning"}
+        {moving ? t("moving range") : t("earning")}
       </motion.span>
     </AnimatePresence>
   );

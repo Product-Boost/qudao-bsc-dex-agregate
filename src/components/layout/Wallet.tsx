@@ -9,6 +9,7 @@ import { useAppConfig } from "../../lib/config";
 import { useOpenWallet, WalletModalCtx } from "../../lib/walletModal";
 import { identifyInjected, walletFor } from "../../lib/wallets";
 import { WalletModal } from "./WalletModal";
+import { useT } from "../../i18n";
 
 export function WalletProvider({ children }: { children: ReactNode }) {
   const [open, setOpen] = useState(false);
@@ -21,15 +22,17 @@ export function WalletProvider({ children }: { children: ReactNode }) {
 }
 
 export function ConnectButton({ size = "md", className = "" }: { size?: "sm" | "md" | "lg"; className?: string }) {
+  const { t } = useT();
   const open = useOpenWallet();
   return (
     <Button size={size} className={className} onClick={open}>
-      <WalletIcon className="size-4" /> Connect wallet
+      <WalletIcon className="size-4" /> {t("Connect wallet")}
     </Button>
   );
 }
 
 export function WalletButton() {
+  const { t } = useT();
   const { address, chainId, isConnected, connector } = useConnection();
   const { disconnect } = useDisconnect();
   const { switchChain, isPending: switching } = useSwitchChain();
@@ -48,12 +51,12 @@ export function WalletButton() {
 
   if (!isConnected || !address) return <ConnectButton size="sm" />;
   const info = connector?.id === "injected" ? identifyInjected() : connector ? walletFor(connector.id, connector.name) : undefined;
-  const label = connector?.type === "mock" ? "Dev wallet" : connector?.id === "injected" ? (info?.name ?? "Browser wallet") : connector?.name;
+  const label = connector?.type === "mock" ? t("Dev wallet") : connector?.id === "injected" ? (info?.name ?? t("Browser wallet")) : connector?.name;
   const icon = connector?.icon ?? info?.icon;
   if (chainId !== chain.id)
     return (
       <Button size="sm" variant="danger" busy={switching} onClick={() => switchChain({ chainId: chain.id })}>
-        <TriangleAlert className="size-4" /> Switch to {chain.id === 97 ? "BSC testnet" : "BNB Chain"}
+        <TriangleAlert className="size-4" /> {t(chain.id === 97 ? "Switch to BSC testnet" : "Switch to BNB Chain")}
       </Button>
     );
   return (
@@ -69,10 +72,10 @@ export function WalletButton() {
           <div className="px-3 py-2">
             <div className="flex items-center gap-2 text-xs text-mute">
               {icon && <img src={icon} alt="" className="size-4 rounded" />}
-              Connected with {label}
+              {t("Connected with {name}", { name: label ?? "" })}
             </div>
             <div className="mt-1 font-mono text-sm">{short(address, 6)}</div>
-            {isLocalFork && <div className="mt-1 text-xs text-warn">Local BSC fork</div>}
+            {isLocalFork && <div className="mt-1 text-xs text-warn">{t("Local BSC fork")}</div>}
           </div>
           <MenuButton
             onClick={() => {
@@ -81,10 +84,10 @@ export function WalletButton() {
               setTimeout(() => setCopied(false), 1500);
             }}
           >
-            {copied ? <Check className="size-4 text-up" /> : <Copy className="size-4" />} Copy address
+            {copied ? <Check className="size-4 text-up" /> : <Copy className="size-4" />} {t("Copy address")}
           </MenuButton>
           <a href={`${c.explorer}/address/${address}`} target="_blank" rel="noreferrer" className="flex w-full items-center gap-2 rounded-xl px-3 py-2 text-sm text-fg-2 hover:bg-panel-3 hover:text-fg">
-            <ExternalLink className="size-4" /> View on BscScan
+            <ExternalLink className="size-4" /> {t("View on BscScan")}
           </a>
           <MenuButton
             onClick={() => {
@@ -92,7 +95,7 @@ export function WalletButton() {
               setMenu(false);
             }}
           >
-            <LogOut className="size-4" /> Disconnect
+            <LogOut className="size-4" /> {t("Disconnect")}
           </MenuButton>
         </div>
       )}

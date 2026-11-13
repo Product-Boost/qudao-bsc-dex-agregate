@@ -15,6 +15,7 @@ import { approvalsNeeded } from "../lib/permit2";
 import { swapperAbi } from "../abis/abis";
 import { BNB, NATIVE, useBaseTokens, useResolvedToken, useTokenBalance, type Token } from "../hooks/tokens";
 import { bps, sig } from "../lib/format";
+import { useT } from "../i18n";
 
 const SLIPPAGES = ["10", "50", "100", "300"] as const;
 
@@ -23,6 +24,7 @@ export function Swap({ initialOut }: { initialOut?: Token | null }) {
   const config = useConfig();
   const { address } = useConnection();
   const tx = useTx();
+  const { t } = useT();
   const base = useBaseTokens();
   const [tokenIn, setIn] = useState<Token | null>(BNB);
   const [tokenOutRaw, setOut] = useState<Token | null>(initialOut ?? base.find((t) => t.symbol === "USDT") ?? null);
@@ -71,7 +73,7 @@ export function Swap({ initialOut }: { initialOut?: Token | null }) {
     if (!quote || !tIn || !tokenOut || !address || !cfg.deployment) return;
     if (!trusted) return;
     const approvals = tIn.address === NATIVE ? [] : await approvalsNeeded(config, address, cfg.deployment.swapper, [{ token: tIn.address, amount: amountIn, symbol: tIn.symbol }]);
-    const res = await tx(`Swap ${tIn.symbol} → ${tokenOut.symbol}`, [
+    const res = await tx(t("Swap {a} → {b}", { a: tIn.symbol, b: tokenOut.symbol }), [
       ...approvals,
       {
         address: cfg.deployment.swapper,
@@ -79,7 +81,7 @@ export function Swap({ initialOut }: { initialOut?: Token | null }) {
         functionName: "swapForUser",
         args: [tIn.address, tokenOut.address, amountIn, BigInt(quote.minOut), quote.router, quote.data, address],
         value: tIn.address === NATIVE ? amountIn : 0n,
-        label: "Swap",
+        label: t("Swap"),
       },
     ]);
     if (res) setValue("");
@@ -89,26 +91,26 @@ export function Swap({ initialOut }: { initialOut?: Token | null }) {
   return (
     <div>
       <div className="mb-3 flex items-center justify-between">
-        <h2 className="text-lg font-semibold">Swap</h2>
-        <button onClick={() => setShowSettings((s) => !s)} className="flex items-center gap-1.5 rounded-lg px-2 py-1 text-xs text-mute hover:text-fg" aria-label="Swap settings">
+        <h2 className="text-lg font-semibold">{t("Swap")}</h2>
+        <button onClick={() => setShowSettings((s) => !s)} className="flex items-center gap-1.5 rounded-lg px-2 py-1 text-xs text-mute hover:text-fg" aria-label={t("Swap settings")}>
           <Settings2 className="size-4" /> {bps(Number(slip))}
         </button>
       </div>
       {showSettings && (
         <div className="mb-3 rounded-2xl border border-line bg-ink-2 p-3">
-          <div className="label mb-2">Price tolerance</div>
+          <div className="label mb-2">{t("Price tolerance")}</div>
           <Segmented size="sm" value={slip} onChange={setSlip} options={SLIPPAGES.map((s) => ({ value: s, label: bps(Number(s)) }))} />
-          <p className="mt-2 text-xs text-mute">The swap is cancelled if you'd receive less than this below the quote.</p>
+          <p className="mt-2 text-xs text-mute">{t("The swap is cancelled if you'd receive less than this below the quote.")}</p>
         </div>
       )}
-      <AmountInput label="You pay" token={tIn} value={value} onChange={setValue} onToken={setIn} exclude={tokenOut ? [tokenOut.address] : []} maxReserve={parseUnits("0.003", 18)} />
+      <AmountInput label={t("You pay")} token={tIn} value={value} onChange={setValue} onToken={setIn} exclude={tokenOut ? [tokenOut.address] : []} maxReserve={parseUnits("0.003", 18)} />
       <div className="relative z-10 -my-3 flex justify-center">
-        <button onClick={flip} aria-label="Swap direction" className="grid size-9 place-items-center rounded-xl border border-line-2 bg-panel text-fg-2 hover:text-gold-2">
+        <button onClick={flip} aria-label={t("Swap direction")} className="grid size-9 place-items-center rounded-xl border border-line-2 bg-panel text-fg-2 hover:text-gold-2">
           <ArrowDownUp className="size-4" />
         </button>
       </div>
       <AmountInput
-        label="You receive (after the 0.15% fee)"
+        label={t("You receive (after the 0.15% fee)")}
         token={tokenOut}
         value={net ? String(Number(net.toPrecision(8))) : ""}
         onToken={setOut}
@@ -116,30 +118,30 @@ export function Swap({ initialOut }: { initialOut?: Token | null }) {
       />
       {quote && tIn && tokenOut && (
         <div className="mt-3 rounded-2xl border border-line bg-ink-2 px-4 py-2">
-          <Row label="Rate">
+          <Row label={t("Rate")}>
             1 {tIn.symbol} = {sig(rate)} {tokenOut.symbol}
           </Row>
-          <Row label="Minimum received">
+          <Row label={t("Minimum received")}>
             {sig(Number(formatUnits(BigInt(quote.minOut), tokenOut.decimals)))} {tokenOut.symbol}
           </Row>
-          <Row label="Price impact">
+          <Row label={t("Price impact")}>
             <span className={quote.priceImpactBps > 300 ? "text-down" : quote.priceImpactBps > 100 ? "text-warn" : ""}>{bps(quote.priceImpactBps)}</span>
           </Row>
-          <Row label="Qudao fee">{bps(quote.feeBps)}</Row>
-          <Row label={<span className="inline-flex items-center gap-1"><Route className="size-3.5" /> Route</span>}>
+          <Row label={t("Qudao fee")}>{bps(quote.feeBps)}</Row>
+          <Row label={<span className="inline-flex items-center gap-1"><Route className="size-3.5" /> {t("Route")}</span>}>
             <span className="text-xs">{quote.route.join(" → ")}</span>
           </Row>
         </div>
       )}
-      {quote && !trusted && <Notice tone="down" className="mt-3">This quote doesn't go through PancakeSwap's official router, so Qudao stopped it.</Notice>}
+      {quote && !trusted && <Notice tone="down" className="mt-3">{t("This quote doesn't go through PancakeSwap's official router, so Qudao stopped it.")}</Notice>}
       {error && amountIn > 0n && <Notice tone="warn" className="mt-3">{(error as Error).message}</Notice>}
-      {!cfg.deployment && <Notice className="mt-3">Swaps open when Qudao's contracts are live.</Notice>}
+      {!cfg.deployment && <Notice className="mt-3">{t("Swaps open when Qudao's contracts are live.")}</Notice>}
       <div className="mt-4">
         {!address ? (
           <ConnectButton className="w-full" size="lg" />
         ) : (
           <Button size="lg" className="w-full" disabled={!quote || !trusted || insufficient || isFetching} busy={isFetching && amountIn > 0n} onClick={execute}>
-            {insufficient ? `Not enough ${tIn?.symbol}` : amountIn === 0n ? "Enter an amount" : "Swap"}
+            {insufficient ? t("Not enough {symbol}", { symbol: tIn?.symbol ?? "" }) : amountIn === 0n ? t("Enter an amount") : t("Swap")}
           </Button>
         )}
       </div>

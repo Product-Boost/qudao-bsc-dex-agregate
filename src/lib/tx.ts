@@ -16,6 +16,7 @@ import {
 import { encodeFunctionData, type Abi, type Address, type Hash } from "viem";
 import { friendlyError } from "./errors";
 import { toast } from "./toast";
+import { useT } from "../i18n";
 import { useAppConfig } from "./config";
 
 export interface Call {
@@ -60,15 +61,16 @@ export function useTx() {
   const qc = useQueryClient();
   const { chain } = useAppConfig();
   const canBatch = useBatchSupport();
+  const { t } = useT();
 
   return useCallback(
     async (title: string, calls: Call[]): Promise<TxResult | null> => {
       if (!address) {
-        toast.error("Connect a wallet first");
+        toast.error(t("Connect a wallet first"));
         return null;
       }
       const txUrl = (h: Hash) => `${chain.explorer}/tx/${h}`;
-      const id = toast.push({ kind: "pending", title, body: "Checking the transaction…" });
+      const id = toast.push({ kind: "pending", title, body: t("Checking the transaction…") });
       const hashes: Hash[] = [];
       try {
         if (calls.length > 1 && (await canBatch())) {
@@ -85,7 +87,7 @@ export function useTx() {
           } catch (e) {
             if (!/eth_simulateV1|not (supported|found|available)|does not exist/i.test(String((e as Error).message))) throw e;
           }
-          toast.update(id, { body: "Confirm in your wallet (one confirmation)." });
+          toast.update(id, { body: t("Confirm in your wallet (one confirmation).") });
           const { id: callsId } = await sendCalls(config, {
             calls: calls.map((c) => ({
               to: c.address,
@@ -93,14 +95,14 @@ export function useTx() {
               value: c.value,
             })),
           });
-          toast.update(id, { body: "Submitted. Waiting for the network…" });
+          toast.update(id, { body: t("Submitted. Waiting for the network…") });
           const status = await waitForCallsStatus(config, { id: callsId });
           for (const r of status.receipts ?? []) hashes.push(r.transactionHash);
-          if (status.status !== "success") throw new Error("The transaction failed on-chain.");
+          if (status.status !== "success") throw new Error(t("The transaction failed on-chain."));
         } else {
           for (const [i, c] of calls.entries()) {
-            const step = calls.length > 1 ? ` (${i + 1} of ${calls.length})` : "";
-            toast.update(id, { body: `${c.label ?? "Checking"}${step}…` });
+            const step = calls.length > 1 ? t(" ({n} of {total})", { n: i + 1, total: calls.length }) : "";
+            toast.update(id, { body: `${c.label ?? t("Checking")}${step}…` });
             const { request } = await simulateContract(config, {
               account: address,
               address: c.address,
@@ -109,15 +111,15 @@ export function useTx() {
               args: (c.args ?? []) as never,
               value: c.value,
             } as never);
-            toast.update(id, { body: `Confirm in your wallet${step}.` });
+            toast.update(id, { body: t("Confirm in your wallet{step}.", { step }) });
             const hash = await writeContract(config, request as never);
             hashes.push(hash);
-            toast.update(id, { body: `Submitted${step}. Waiting for the network…`, href: txUrl(hash) });
+            toast.update(id, { body: t("Submitted{step}. Waiting for the network…", { step }), href: txUrl(hash) });
             const receipt = await waitForTransactionReceipt(config, { hash });
-            if (receipt.status !== "success") throw new Error("The transaction failed on-chain.");
+            if (receipt.status !== "success") throw new Error(t("The transaction failed on-chain."));
           }
         }
-        toast.update(id, { kind: "success", body: "Done.", href: hashes.length ? txUrl(hashes[hashes.length - 1]) : undefined });
+        toast.update(id, { kind: "success", body: t("Done."), href: hashes.length ? txUrl(hashes[hashes.length - 1]) : undefined });
         await qc.invalidateQueries();
         return { hashes };
       } catch (e) {
@@ -128,6 +130,6 @@ export function useTx() {
         return null;
       }
     },
-    [address, canBatch, config, qc, chain.explorer],
+    [address, canBatch, config, qc, chain.explorer, t],
   );
 }

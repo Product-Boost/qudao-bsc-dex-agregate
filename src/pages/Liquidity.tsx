@@ -10,6 +10,7 @@ import { PairIcon } from "../components/TokenIcon";
 import { GuideButton } from "../components/Guide";
 import { api, type PoolOverview } from "../lib/api";
 import { pct, usd } from "../lib/format";
+import { useT } from "../i18n";
 
 type Group = "all" | PoolOverview["group"];
 type Sort = "qudao" | "liquidity" | "volume" | "apr" | "est";
@@ -30,6 +31,7 @@ const SORTS: Record<Sort, (p: PoolOverview) => number> = {
 };
 
 export default function Liquidity() {
+  const { t } = useT();
   const navigate = useNavigate();
   const [group, setGroup] = useState<Group>("all");
   const [sort, setSort] = useState<Sort>("qudao");
@@ -61,14 +63,14 @@ export default function Liquidity() {
   return (
     <Page>
       <PageTitle
-        title="Earn on PancakeSwap pools"
-        sub="Put your tokens to work in a PancakeSwap v3 pool. Qudao moves your range when the price moves, reinvests the fees and farms CAKE where the pool has a farm."
+        title={t("Earn on PancakeSwap pools")}
+        sub={t("Put your tokens to work in a PancakeSwap v3 pool. Qudao moves your range when the price moves, reinvests the fees and farms CAKE where the pool has a farm.")}
         right={
           <div className="flex items-center gap-2">
             <GuideButton id="liquidity" />
             <span data-guide="new-position">
               <ButtonLink to="/liquidity/new">
-                <Plus className="size-4" /> New position
+                <Plus className="size-4" /> {t("New position")}
               </ButtonLink>
             </span>
           </div>
@@ -76,26 +78,26 @@ export default function Liquidity() {
       />
       <Card className="p-5">
         <div className="flex flex-wrap items-center justify-between gap-3" data-guide="pool-groups">
-          <Segmented value={group} onChange={setGroup} options={GROUPS} />
+          <Segmented value={group} onChange={setGroup} options={GROUPS.map((g) => ({ ...g, label: t(g.label) }))} />
           <label className="flex h-10 items-center gap-2 rounded-xl border border-line bg-ink-2 px-3 focus-within:border-gold/50">
             <Search className="size-4 text-mute" />
-            <input value={q} onChange={(e) => setQ(e.target.value)} placeholder="Find a pair" className="w-40 bg-transparent text-sm outline-none placeholder:text-dim" />
+            <input value={q} onChange={(e) => setQ(e.target.value)} placeholder={t("Find a pair")} className="w-40 bg-transparent text-sm outline-none placeholder:text-dim" />
           </label>
         </div>
         <div className="mt-4 overflow-x-auto" data-guide="pool-table">
           <table className="w-full min-w-[860px] text-sm">
             <thead>
               <tr className="label border-b border-line text-left">
-                <th className="py-3 pr-3 font-medium">Pool</th>
-                {head("liquidity", "Liquidity")}
-                {head("volume", "Volume 24h")}
-                {head("apr", "APR", "Trading fees the whole pool earned in the last 24 hours, per year, divided by its liquidity.")}
+                <th className="py-3 pr-3 font-medium">{t("Pool")}</th>
+                {head("liquidity", t("Liquidity"))}
+                {head("volume", t("Volume 24h"))}
+                {head("apr", t("APR"), t("Trading fees the whole pool earned in the last 24 hours, per year, divided by its liquidity."))}
                 {head(
                   "est",
-                  "Est. APR",
-                  "What a ±5% range would have earned over the last 7 days from this pool's fees, re-centred whenever the price left it, after Qudao's fee. Fees reinvested daily give the APY. Past results don't promise future ones.",
+                  t("Est. APR"),
+                  t("What a ±5% range would have earned over the last 7 days from this pool's fees, re-centred whenever the price left it, after Qudao's fee. Fees reinvested daily give the APY. Past results don't promise future ones."),
                 )}
-                {head("qudao", "On Qudao")}
+                {head("qudao", t("On Qudao"))}
                 <th className="py-3 pl-3" />
               </tr>
             </thead>
@@ -119,12 +121,12 @@ export default function Liquidity() {
                           <Badge>{pct(p.feePct, { digits: 2 })}</Badge>
                           {p.farm && (
                             <Badge tone="gold">
-                              <Sprout className="size-3" /> CAKE farm
+                              <Sprout className="size-3" /> {t("CAKE farm")}
                             </Badge>
                           )}
-                          {p.group === "stocks" && <Badge tone="info">Stock</Badge>}
+                          {p.group === "stocks" && <Badge tone="info">{t("Stock")}</Badge>}
                         </div>
-                        <div className="text-xs text-mute">PancakeSwap v3</div>
+                        <div className="text-xs text-mute">{t("PancakeSwap v3")}</div>
                       </div>
                     </div>
                   </td>
@@ -138,7 +140,7 @@ export default function Liquidity() {
                         <div className="num text-xs text-mute">APY {pct(p.estApyPct)}</div>
                       </div>
                     ) : p.estimating ? (
-                      <span className="text-xs text-mute">estimating…</span>
+                      <span className="text-xs text-mute">{t("estimating…")}</span>
                     ) : (
                       <span className="text-mute">—</span>
                     )}
@@ -147,23 +149,23 @@ export default function Liquidity() {
                     {p.qudaoPositions > 0 ? (
                       <div>
                         <div className="num">{usd(p.qudaoTvlUsd, { compact: true })}</div>
-                        <div className="text-xs text-mute">{p.qudaoPositions} positions</div>
+                        <div className="text-xs text-mute">{t("{n} positions", { n: p.qudaoPositions })}</div>
                       </div>
                     ) : (
                       <span className="text-mute">—</span>
                     )}
                   </td>
                   <td className="py-3 pl-3 text-right">
-                    <span className="rounded-lg border border-line-2 px-3 py-1.5 text-xs font-semibold text-fg-2 group-hover:border-gold/60 group-hover:text-gold-2">Earn</span>
+                    <span className="rounded-lg border border-line-2 px-3 py-1.5 text-xs font-semibold text-fg-2 group-hover:border-gold/60 group-hover:text-gold-2">{t("Earn")}</span>
                   </td>
                 </tr>
               ))}
             </tbody>
           </table>
-          {error && <p className="py-10 text-center text-sm text-mute">Pool data is unavailable right now.</p>}
-          {data && pools.length === 0 && <p className="py-10 text-center text-sm text-mute">No pools match. Any pair can still be used: open a new position and pick the tokens.</p>}
+          {error && <p className="py-10 text-center text-sm text-mute">{t("Pool data is unavailable right now.")}</p>}
+          {data && pools.length === 0 && <p className="py-10 text-center text-sm text-mute">{t("No pools match. Any pair can still be used: open a new position and pick the tokens.")}</p>}
         </div>
-        <p className="mt-4 text-xs text-mute">Pools with less than $10k of liquidity or no trading fees aren't listed. Any pair on PancakeSwap v3 can still be used from "New position".</p>
+        <p className="mt-4 text-xs text-mute">{t("Pools with less than $10k of liquidity or no trading fees aren't listed. Any pair on PancakeSwap v3 can still be used from \"New position\".")}</p>
       </Card>
     </Page>
   );

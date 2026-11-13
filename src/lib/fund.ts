@@ -9,6 +9,7 @@ import { useBatchSupport, useTx, type Call, type TxResult } from "./tx";
 import { approvalsNeeded, EMPTY_PERMIT, signPermitBatch, type PermitBatch } from "./permit2";
 import { friendlyError } from "./errors";
 import { toast } from "./toast";
+import { useT } from "../i18n";
 
 export interface Pull {
   token: Address;
@@ -22,6 +23,7 @@ export function useFunding() {
   const cfg = useAppConfig();
   const tx = useTx();
   const canBatch = useBatchSupport();
+  const { t } = useT();
 
   return useCallback(
     async (title: string, spender: Address, pulls: Pull[], build: (permit: PermitBatch, signature: Hex) => Call): Promise<TxResult | null> => {
@@ -30,17 +32,17 @@ export function useFunding() {
       if (erc.length === 0) return tx(title, [build(EMPTY_PERMIT, "0x")]);
       if (await canBatch()) return tx(title, [...(await approvalsNeeded(config, address, spender, erc)), build(EMPTY_PERMIT, "0x")]);
       const approvals = await approvalsNeeded(config, address, cfg.permit2, erc, true);
-      if (approvals.length && !(await tx("Allow Permit2 (once per token)", approvals))) return null;
+      if (approvals.length && !(await tx(t("Allow Permit2 (once per token)"), approvals))) return null;
       let signed;
       try {
         signed = await signPermitBatch(config, { permit2: cfg.permit2, chainId, spender, tokens: erc.map(({ token, amount }) => ({ token, amount })) });
       } catch (e) {
         const f = friendlyError(e);
-        if (!f.cancelled) toast.error("Signature failed", f.message);
+        if (!f.cancelled) toast.error(t("Signature failed"), f.message);
         return null;
       }
       return tx(title, [build(signed.permit, signed.signature)]);
     },
-    [address, chainId, canBatch, cfg.permit2, config, tx],
+    [address, chainId, canBatch, cfg.permit2, config, tx, t],
   );
 }

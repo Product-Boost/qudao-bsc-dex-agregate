@@ -1,5 +1,6 @@
 // Number, money, token-amount, address and time formatting.
 import { formatUnits } from "viem";
+import { getLocale, localeTag } from "../i18n/locale";
 
 const compact = new Intl.NumberFormat("en-US", { notation: "compact", maximumFractionDigits: 2 });
 
@@ -61,19 +62,22 @@ const toDate = (t: number | string | Date) => new Date(typeof t === "number" && 
 export function ago(t: number | string | Date): string {
   const ms = Date.now() - toDate(t).getTime();
   const s = Math.max(0, Math.round(ms / 1000));
-  if (s < 60) return "just now";
-  if (s < 3600) return Math.floor(s / 60) + " min ago";
-  if (s < 86400) return Math.floor(s / 3600) + " h ago";
+  const zh = getLocale() === "zh";
+  if (s < 60) return zh ? "刚刚" : "just now";
+  if (s < 3600) return Math.floor(s / 60) + (zh ? " 分钟前" : " min ago");
+  if (s < 86400) return Math.floor(s / 3600) + (zh ? " 小时前" : " h ago");
   const d = Math.floor(s / 86400);
-  return d < 60 ? d + " d ago" : date(t);
+  if (d < 60) return d + (zh ? " 天前" : " d ago");
+  return date(t);
 }
 
-export const date = (t: number | string | Date) => toDate(t).toLocaleDateString("en-US", { month: "short", day: "numeric", year: "numeric" });
+export const date = (t: number | string | Date) => toDate(t).toLocaleDateString(localeTag(), { month: "short", day: "numeric", year: "numeric" });
 export const dateTime = (t: number | string | Date) =>
-  toDate(t).toLocaleString("en-US", { month: "short", day: "numeric", hour: "2-digit", minute: "2-digit" });
+  toDate(t).toLocaleString(localeTag(), { month: "short", day: "numeric", hour: "2-digit", minute: "2-digit" });
 
 export function duration(sec: number): string {
-  if (sec < 3600) return Math.max(1, Math.round(sec / 60)) + " min";
-  if (sec < 86400 * 2) return Math.round(sec / 3600) + " h";
-  return Math.round(sec / 86400) + " days";
+  const zh = getLocale() === "zh";
+  if (sec < 3600) return Math.max(1, Math.round(sec / 60)) + (zh ? " 分钟" : " min");
+  if (sec < 86400 * 2) return Math.round(sec / 3600) + (zh ? " 小时" : " h");
+  return Math.round(sec / 86400) + (zh ? " 天" : " days");
 }

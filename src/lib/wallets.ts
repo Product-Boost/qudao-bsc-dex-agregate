@@ -2,6 +2,7 @@
 // and how to reach its phone app (WalletConnect deep link, or opening Qudao in the app's own browser).
 // Any other installed wallet still shows up, through EIP-6963 or window.ethereum.
 // Logos (public/wallets) and store links come from RainbowKit's wallet list (MIT); dapp links from each wallet's docs.
+import { t } from "../i18n";
 
 export type WalletInfo = {
   id: string;
@@ -165,11 +166,11 @@ export function extensionLink(w: WalletInfo): { href: string; label: string } | 
   const x = w.extension;
   if (!x) return undefined;
   const b = browserName();
-  if (b === "Firefox") return x.firefox ? { href: x.firefox, label: "Add to Firefox" } : { href: x.home, label: "Get the extension" };
-  if (b === "Edge" && x.edge) return { href: x.edge, label: "Add to Edge" };
-  if (b === "Safari") return { href: x.home, label: "Get the extension" };
-  if (x.chrome && b !== "your browser") return { href: x.chrome, label: `Add to ${b}` };
-  return { href: x.home, label: "Get the extension" };
+  if (b === "Firefox") return x.firefox ? { href: x.firefox, label: t("Add to Firefox") } : { href: x.home, label: t("Get the extension") };
+  if (b === "Edge" && x.edge) return { href: x.edge, label: t("Add to Edge") };
+  if (b === "Safari") return { href: x.home, label: t("Get the extension") };
+  if (x.chrome && b !== "your browser") return { href: x.chrome, label: t("Add to {browser}", { browser: b }) };
+  return { href: x.home, label: t("Get the extension") };
 }
 
 /** App store link for this phone, or the wallet's download page. */

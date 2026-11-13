@@ -14,6 +14,10 @@ import { useAppConfig } from "../lib/config";
 import { useTx } from "../lib/tx";
 import { bps, date, short, sig } from "../lib/format";
 import { referralsAbi, revenueRouterAbi } from "../abis/abis";
+import { useT } from "../i18n";
+
+const CANVAS_DISPLAY = '"Space Grotesk Variable", "PingFang SC", "Microsoft YaHei", "Noto Sans SC", sans-serif';
+const CANVAS_BODY = '"Manrope Variable", "PingFang SC", "Microsoft YaHei", "Noto Sans SC", sans-serif';
 
 const XIcon = () => (
   <svg viewBox="0 0 24 24" className="size-4" fill="currentColor" aria-hidden>
@@ -21,7 +25,7 @@ const XIcon = () => (
   </svg>
 );
 
-async function drawShareImage(canvas: HTMLCanvasElement, code: string, link: string, discount: string, months: number) {
+async function drawShareImage(canvas: HTMLCanvasElement, code: string, link: string, lines: { earn: string; stay: string; join: string; invite: string }) {
   const W = 1200;
   const H = 630;
   canvas.width = W;
@@ -43,19 +47,19 @@ async function drawShareImage(canvas: HTMLCanvasElement, code: string, link: str
   await logo.decode().catch(() => {});
   g.drawImage(logo, 72, 64, 64, 64);
   g.fillStyle = "#f5f2ea";
-  g.font = '600 40px "Space Grotesk Variable", sans-serif';
+  g.font = `600 40px ${CANVAS_DISPLAY}`;
   g.fillText("Qudao", 152, 110);
-  g.font = '600 66px "Space Grotesk Variable", sans-serif';
-  g.fillText("Earn on PancakeSwap.", 72, 250);
+  g.font = `600 66px ${CANVAS_DISPLAY}`;
+  g.fillText(lines.earn, 72, 250);
   const gold = g.createLinearGradient(72, 0, 760, 0);
   gold.addColorStop(0, "#ffe27a");
   gold.addColorStop(0.5, "#f0b90b");
   gold.addColorStop(1, "#c98a00");
   g.fillStyle = gold;
-  g.fillText("Stay in range, automatically.", 72, 330);
+  g.fillText(lines.stay, 72, 330);
   g.fillStyle = "#c9c5ba";
-  g.font = '500 28px "Manrope Variable", sans-serif';
-  g.fillText(`Join with my code and pay ${discount} less fee for ${months} months.`, 72, 400);
+  g.font = `500 28px ${CANVAS_BODY}`;
+  g.fillText(lines.join, 72, 400);
   g.fillStyle = "#16151a";
   g.strokeStyle = "rgba(240,185,11,0.5)";
   g.lineWidth = 2;
@@ -64,17 +68,18 @@ async function drawShareImage(canvas: HTMLCanvasElement, code: string, link: str
   g.fill();
   g.stroke();
   g.fillStyle = "#8e8a80";
-  g.font = '500 20px "Manrope Variable", sans-serif';
-  g.fillText("INVITE CODE", 104, 490);
+  g.font = `500 20px ${CANVAS_BODY}`;
+  g.fillText(lines.invite, 104, 490);
   g.fillStyle = "#fcd535";
-  g.font = '600 46px "Space Grotesk Variable", sans-serif';
+  g.font = `600 46px ${CANVAS_DISPLAY}`;
   g.fillText(code.toUpperCase(), 104, 540);
   g.fillStyle = "#8e8a80";
-  g.font = '500 22px "Manrope Variable", sans-serif';
+  g.font = `500 22px ${CANVAS_BODY}`;
   g.fillText(link.replace(/^https?:\/\//, ""), 530, 520);
 }
 
 export default function Referrals() {
+  const { t, locale } = useT();
   const cfg = useAppConfig();
   const dep = cfg.deployment;
   const { address } = useConnection();
@@ -97,37 +102,45 @@ export default function Referrals() {
   const discount = bps(cfg.protocol.referrals.inviteeDiscountBps);
   const months = Math.round(cfg.protocol.referrals.inviteeDiscountDays / 30);
   const share = bps(cfg.protocol.referrals.referrerShareBps);
-  const text = `I use Qudao to keep my PancakeSwap liquidity in range automatically. Join with my code ${myCode} and pay ${discount} less fee for ${months} months.`;
+  const text = t("I use Qudao to keep my PancakeSwap liquidity in range automatically. Join with my code {code} and pay {discount} less fee for {months} months.", { code: myCode ?? "", discount, months });
+  const shareLines = {
+    earn: t("Earn on PancakeSwap."),
+    stay: t("Stay in range, automatically."),
+    join: t("Join with my code and pay {discount} less fee for {months} months.", { discount, months }),
+    invite: t("INVITE CODE"),
+  };
 
   useEffect(() => {
-    if (myCode && canvas.current) drawShareImage(canvas.current, myCode, link, discount, months);
-  }, [myCode, link, discount, months]);
+    if (myCode && canvas.current) drawShareImage(canvas.current, myCode, link, shareLines);
+    // Redraw when the language or the numbers on the card change.
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [myCode, link, discount, months, locale]);
 
   const register = async () => {
     if (!dep || !codeHex) return;
-    if (await tx("Register your code", [{ address: dep.referrals, abi: referralsAbi, functionName: "register", args: [codeHex] }])) refetch();
+    if (await tx(t("Register your code"), [{ address: dep.referrals, abi: referralsAbi, functionName: "register", args: [codeHex] }])) refetch();
   };
 
   const claimable = BigInt(data?.claimableBnb ?? "0");
 
   return (
     <Page>
-      <PageTitle title="Referrals" sub={`Earn ${share} of the Qudao fees your friends pay, forever, in BNB. They pay ${discount} less for their first ${months} months.`} right={<GuideButton id="referrals" />} />
+      <PageTitle title={t("Referrals")} sub={t("Earn {share} of the Qudao fees your friends pay, forever, in BNB. They pay {discount} less for their first {months} months.", { share, discount, months })} right={<GuideButton id="referrals" />} />
 
       {!address ? (
         <Card>
-          <Empty icon={<Gift className="size-6" />} title={`Earn ${share} of your friends' fees`} action={<ConnectButton size="lg" />}>
-            Connect a wallet to get your invite link. It works for any wallet that hasn't used Qudao before.
+          <Empty icon={<Gift className="size-6" />} title={t("Earn {share} of your friends' fees", { share })} action={<ConnectButton size="lg" />}>
+            {t("Connect a wallet to get your invite link. It works for any wallet that hasn't used Qudao before.")}
           </Empty>
         </Card>
       ) : !dep ? (
-        <Card className="p-6 text-sm text-mute">Referrals open when Qudao's contracts are live.</Card>
+        <Card className="p-6 text-sm text-mute">{t("Referrals open when Qudao's contracts are live.")}</Card>
       ) : (
         <>
           <div className="grid gap-6 lg:grid-cols-[1.1fr_1fr]">
             <Card hi className="p-6">
               <div data-guide="ref-code">
-                <CardHeader title="Your invite code" sub="Stored on-chain, so your links keep working whatever happens to this website." />
+                <CardHeader title={t("Your invite code")} sub={t("Stored on-chain, so your links keep working whatever happens to this website.")} />
                 {myCode ? (
                   <div className="mt-5">
                     <div className="num text-5xl font-semibold tracking-wider text-gold-2">{myCode.toUpperCase()}</div>
@@ -142,7 +155,7 @@ export default function Referrals() {
                           setTimeout(() => setCopied(false), 1500);
                         }}
                       >
-                        {copied ? <Check className="size-4 text-up" /> : <Copy className="size-4" />} {copied ? "Copied" : "Copy"}
+                        {copied ? <Check className="size-4 text-up" /> : <Copy className="size-4" />} {copied ? t("Copied") : t("Copy")}
                       </Button>
                     </div>
                   </div>
@@ -152,41 +165,41 @@ export default function Referrals() {
                       <input
                         value={code}
                         onChange={(e) => setCode(e.target.value.toLowerCase().replace(/[^a-z0-9]/g, "").slice(0, 8))}
-                        placeholder="8 letters or digits"
+                        placeholder={t("8 letters or digits")}
                         className="num h-12 flex-1 bg-transparent text-xl tracking-widest outline-none placeholder:text-base placeholder:tracking-normal placeholder:text-dim"
                       />
                       <span className="num text-xs text-mute">{code.length}/8</span>
                     </label>
                     <p className={`mt-2 text-xs ${valid && taken.data && taken.data !== zeroAddress ? "text-down" : valid ? "text-up" : "text-mute"}`}>
-                      {!valid ? "Pick exactly 8 characters: a–z and 0–9." : taken.data && taken.data !== zeroAddress ? "That code is taken." : "Available."}
+                      {!valid ? t("Pick exactly 8 characters: a–z and 0–9.") : taken.data && taken.data !== zeroAddress ? t("That code is taken.") : t("Available")}
                     </p>
                     <Button className="mt-4" disabled={!valid || (!!taken.data && taken.data !== zeroAddress)} onClick={register}>
-                      Register code
+                      {t("Register code")}
                     </Button>
-                    <p className="mt-3 text-xs text-mute">One code per wallet, registered once. It costs only the network fee.</p>
+                    <p className="mt-3 text-xs text-mute">{t("One code per wallet, registered once. It costs only the network fee.")}</p>
                   </div>
                 )}
               </div>
             </Card>
 
             <Card className="p-6">
-              <CardHeader title="Your rewards" sub="Paid in BNB from the fees your invitees pay." />
+              <CardHeader title={t("Your rewards")} sub={t("Paid in BNB from the fees your invitees pay.")} />
               <div className="mt-5 grid grid-cols-2 gap-5">
-                <Stat big label="Earned" value={`${sig(data?.earnedBnb ?? 0, 4)}`} sub="BNB, all time" />
-                <Stat big label="To claim" value={<span className="text-up">{sig(Number(claimable) / 1e18, 4)}</span>} sub="BNB" />
+                <Stat big label={t("Earned")} value={`${sig(data?.earnedBnb ?? 0, 4)}`} sub={t("BNB, all time")} />
+                <Stat big label={t("To claim")} value={<span className="text-up">{sig(Number(claimable) / 1e18, 4)}</span>} sub="BNB" />
               </div>
               <Button
                 className="mt-5 w-full"
                 size="lg"
                 disabled={claimable === 0n}
-                onClick={() => tx("Claim referral rewards", [{ address: dep.revenueRouter, abi: revenueRouterAbi, functionName: "claimReferral", args: [data?.feeTokens ?? []] }])}
+                onClick={() => tx(t("Claim referral rewards"), [{ address: dep.revenueRouter, abi: revenueRouterAbi, functionName: "claimReferral", args: [data?.feeTokens ?? []] }])}
               >
-                {claimable > 0n ? "Claim" : "Nothing to claim yet"}
+                {claimable > 0n ? t("Claim") : t("Nothing to claim yet")}
               </Button>
               <ul className="mt-5 space-y-1.5 text-xs text-mute">
-                <li>• Only wallets new to Qudao can join with a link, and not your own.</li>
-                <li>• The link is applied when they open their first position.</li>
-                <li>• Your share comes out of Qudao's fee, never out of their deposit.</li>
+                <li>• {t("Only wallets new to Qudao can join with a link, and not your own.")}</li>
+                <li>• {t("The link is applied when they open their first position.")}</li>
+                <li>• {t("Your share comes out of Qudao's fee, never out of their deposit.")}</li>
               </ul>
             </Card>
           </div>
@@ -195,7 +208,7 @@ export default function Referrals() {
             <Card className="mt-6 p-6">
               <div data-guide="ref-share" className="grid gap-6 lg:grid-cols-[1fr_auto] lg:items-center">
                 <div>
-                  <CardHeader title="Share" sub="Post your link or download an image to share anywhere." />
+                  <CardHeader title={t("Share")} sub={t("Post your link or download an image to share anywhere.")} />
                   <div className="mt-5 flex flex-wrap gap-2">
                     <a
                       className="inline-flex h-10 items-center gap-2 rounded-xl border border-line-2 px-4 text-sm font-semibold hover:border-gold/60 hover:text-gold-2"
@@ -203,7 +216,7 @@ export default function Referrals() {
                       target="_blank"
                       rel="noreferrer"
                     >
-                      <XIcon /> Post on X
+                      <XIcon /> {t("Post on X")}
                     </a>
                     <a
                       className="inline-flex h-10 items-center gap-2 rounded-xl border border-line-2 px-4 text-sm font-semibold hover:border-gold/60 hover:text-gold-2"
@@ -222,7 +235,7 @@ export default function Referrals() {
                         a.click();
                       }}
                     >
-                      <Download className="size-4" /> Download image
+                      <Download className="size-4" /> {t("Download image")}
                     </Button>
                   </div>
                 </div>
@@ -233,14 +246,14 @@ export default function Referrals() {
 
           <Card className="mt-6 p-6">
             <div data-guide="ref-list">
-              <CardHeader title="Your invites" sub={data?.invited.length ? `${data.invited.length} wallet${data.invited.length > 1 ? "s" : ""} joined with your link.` : undefined} right={<Users className="size-5 text-gold" />} />
+              <CardHeader title={t("Your invites")} sub={data?.invited.length ? t(data.invited.length > 1 ? "{n} wallets joined with your link." : "{n} wallet joined with your link.", { n: data.invited.length }) : undefined} right={<Users className="size-5 text-gold" />} />
               {data?.invited.length ? (
                 <table className="mt-4 w-full text-sm">
                   <thead>
                     <tr className="label text-left">
-                      <th className="py-2 font-medium">Wallet</th>
-                      <th className="py-2 font-medium">Joined</th>
-                      <th className="py-2 text-right font-medium">You earned</th>
+                      <th className="py-2 font-medium">{t("Wallet")}</th>
+                      <th className="py-2 font-medium">{t("Joined")}</th>
+                      <th className="py-2 text-right font-medium">{t("You earned")}</th>
                     </tr>
                   </thead>
                   <tbody>
@@ -254,11 +267,11 @@ export default function Referrals() {
                   </tbody>
                 </table>
               ) : (
-                <p className="mt-4 text-sm text-mute">Nobody has joined with your link yet. {myCode ? "Share it above." : "Register a code to get your link."}</p>
+                <p className="mt-4 text-sm text-mute">{t("Nobody has joined with your link yet.")} {myCode ? t("Share it above.") : t("Register a code to get your link.")}</p>
               )}
             </div>
           </Card>
-          <p className="mt-4 text-xs text-mute">Rewards are counted in BNB at the time each fee is converted.</p>
+          <p className="mt-4 text-xs text-mute">{t("Rewards are counted in BNB at the time each fee is converted.")}</p>
         </>
       )}
     </Page>

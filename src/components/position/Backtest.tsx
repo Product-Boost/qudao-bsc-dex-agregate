@@ -7,6 +7,7 @@ import { Info, Skeleton, Stat } from "../ui";
 import { api, type StrategyName } from "../../lib/api";
 import { pct, sig, usd } from "../../lib/format";
 import type { PairView } from "../../lib/v3";
+import { useT } from "../../i18n";
 
 export function Backtest({
   pool,
@@ -41,29 +42,29 @@ export function Backtest({
     enabled: !!hist && Number.isFinite(lowPct) && Number.isFinite(highPct),
     staleTime: 10 * 60_000,
   });
+  const { t } = useT();
   const r = data?.result;
   const show = (p: number) => (flipped ? 1 / p : p);
   return (
     <div>
       <div className="flex items-center justify-between">
         <h3 className="font-semibold">
-          Last 30 days{" "}
+          {t("Last 30 days")}{" "}
           <Info>
-            Replays the pool's hourly prices and volume with your range and rule. Your share of fees depends on how concentrated your range is versus the pool's other liquidity.
-            Moves pay a swap cost and gas. Past results don't promise future ones.
+            {t("Replays the pool's hourly prices and volume with your range and rule. Your share of fees depends on how concentrated your range is versus the pool's other liquidity. Moves pay a swap cost and gas. Past results don't promise future ones.")}
           </Info>
         </h3>
-        <span className="text-xs text-mute">on {usd(deposit)}{depositUsd > 0 ? "" : " (example)"}</span>
+        <span className="text-xs text-mute">{t("on {amount}", { amount: usd(deposit) })}{depositUsd > 0 ? "" : t("(example)")}</span>
       </div>
       {!r && (isFetching || !hist) && <Skeleton className="mt-4 h-48 w-full" />}
-      {(error || (data && !r)) && <p className="mt-4 text-sm text-mute">Not enough history for this pool yet.</p>}
+      {(error || (data && !r)) && <p className="mt-4 text-sm text-mute">{t("Not enough history for this pool yet.")}</p>}
       {r && (
         <>
           <div className="mt-4 grid grid-cols-2 gap-4 sm:grid-cols-4">
-            <Stat label="Fees earned" value={<span className="text-up">{usd(r.feesUsd)}</span>} />
-            <Stat label="APR" value={<span className="text-gold-2">{pct(r.aprPct)}</span>} sub="after costs" />
-            <Stat label="Time in range" value={pct(r.timeInRangePct)} />
-            <Stat label="Range moves" value={r.moves} sub={`costs ${usd(r.costsUsd)}`} />
+            <Stat label={t("Fees earned")} value={<span className="text-up">{usd(r.feesUsd)}</span>} />
+            <Stat label={t("APR")} value={<span className="text-gold-2">{pct(r.aprPct)}</span>} sub={t("after costs")} />
+            <Stat label={t("Time in range")} value={pct(r.timeInRangePct)} />
+            <Stat label={t("Range moves")} value={r.moves} sub={t("costs {usd}", { usd: usd(r.costsUsd) })} />
           </div>
           <div className="mt-4">
             <AreaChart
@@ -73,7 +74,7 @@ export function Backtest({
               format={(n) => `${sig(n, 5)} ${view.quote}`}
             />
             <p className="mt-1 text-xs text-mute">
-              Price of {view.base} in {view.quote}; the green band is where your range would have been.
+              {t("Price of {base} in {quote}; the green band is where your range would have been.", { base: view.base, quote: view.quote })}
             </p>
           </div>
         </>

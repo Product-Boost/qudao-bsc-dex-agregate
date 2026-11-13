@@ -8,6 +8,7 @@ import { api } from "../../lib/api";
 import { MAX_TICK, MIN_TICK, nearestTick, rangePrices, tickToPct, type PairView } from "../../lib/v3";
 import { PRESETS, presetRange, type Preset } from "../../lib/range";
 import { pct, sig } from "../../lib/format";
+import { useT } from "../../i18n";
 
 
 function PriceBox({ label, value, onCommit, sub }: { label: string; value: number; onCommit: (v: number) => void; sub: string }) {
@@ -82,6 +83,7 @@ export function RangeEditor({
     const y = view.at(b.tickUpper);
     return { lo: Math.min(x, y), hi: Math.max(x, y), liquidity: Number(b.liquidity) };
   });
+  const { t } = useT();
   const width = upper - lower;
   const lowPct = tickToPct(view.inverted ? upper : lower, tick);
   const highPct = tickToPct(view.inverted ? lower : upper, tick);
@@ -93,7 +95,7 @@ export function RangeEditor({
           size="sm"
           value={preset}
           onChange={(p) => p !== "custom" && onChange({ ...presetRange(p, tick, spacing), preset: p })}
-          options={[...PRESETS.map((p) => ({ value: p as Preset, label: p === "full" ? "Full range" : `±${p}%` })), ...(preset === "custom" ? [{ value: "custom" as Preset, label: "Custom" }] : [])]}
+          options={[...PRESETS.map((p) => ({ value: p as Preset, label: p === "full" ? t("Full range") : `±${p}%` })), ...(preset === "custom" ? [{ value: "custom" as Preset, label: t("Custom") }] : [])]}
         />
         <span className="text-xs text-mute">
           1 {view.base} = <span className="num text-fg">{sig(current)}</span> {view.quote}
@@ -102,19 +104,19 @@ export function RangeEditor({
       {bars.length > 0 && !full && <LiquidityChart bars={bars} current={current} low={low} high={high} onChange={setPrices} format={(n) => sig(n, 4)} />}
       {full ? (
         <p className="rounded-2xl border border-line bg-ink-2 p-4 text-sm text-fg-2">
-          Full range never leaves the price, so it never needs moving, but it earns far less per dollar than a narrow range.
+          {t("Full range never leaves the price, so it never needs moving, but it earns far less per dollar than a narrow range.")}
         </p>
       ) : (
         <div className="grid grid-cols-2 gap-3">
-          <PriceBox label={`Low price (${view.quote} per ${view.base})`} value={low} onCommit={(v) => setPrices(v, high)} sub={`${pct(view.inverted ? -highPct : lowPct, { sign: true })} from now`} />
-          <PriceBox label={`High price (${view.quote} per ${view.base})`} value={high} onCommit={(v) => setPrices(low, v)} sub={`${pct(view.inverted ? -lowPct : highPct, { sign: true })} from now`} />
+          <PriceBox label={t("Low price ({quote} per {base})", { quote: view.quote, base: view.base })} value={low} onCommit={(v) => setPrices(v, high)} sub={t("{pct} from now", { pct: pct(view.inverted ? -highPct : lowPct, { sign: true }) })} />
+          <PriceBox label={t("High price ({quote} per {base})", { quote: view.quote, base: view.base })} value={high} onCommit={(v) => setPrices(low, v)} sub={t("{pct} from now", { pct: pct(view.inverted ? -lowPct : highPct, { sign: true }) })} />
         </div>
       )}
       {!full && (tick < lower || tick >= upper) && (
-        <p className="text-xs text-warn">The price is outside this range: the position starts with only one token and earns nothing until the price enters it.</p>
+        <p className="text-xs text-warn">{t("The price is outside this range: the position starts with only one token and earns nothing until the price enters it.")}</p>
       )}
       <p className="text-xs text-mute">
-        Width {width} ticks <Info>Ranges snap to the pool's tick spacing ({spacing}). The narrowest allowed is {minWidthTicks} ticks (about ±{pct(minWidthTicks / 200, { digits: 1 })}).</Info>
+        {t("Width {ticks} ticks", { ticks: width })} <Info>{t("Ranges snap to the pool's tick spacing ({spacing}). The narrowest allowed is {min} ticks (about ±{pct}).", { spacing, min: minWidthTicks, pct: pct(minWidthTicks / 200, { digits: 1 }) })}</Info>
       </p>
     </div>
   );

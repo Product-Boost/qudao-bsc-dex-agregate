@@ -4,6 +4,7 @@ import { erc20Abi, maxUint256, type Address, type Hex } from "viem";
 import { readContract, signTypedData } from "wagmi/actions";
 import type { Config } from "wagmi";
 import type { Call } from "./tx";
+import { t as tr } from "../i18n";
 
 export interface PermitBatch {
   permitted: { token: Address; amount: bigint }[];
@@ -68,7 +69,7 @@ export async function approvalsNeeded(
       abi: erc20Abi,
       functionName: "approve",
       args: [spender, infinite ? maxUint256 : t.amount],
-      label: `Approve ${t.symbol}`,
+      label: tr("Approve {symbol}", { symbol: t.symbol }),
     });
   }
   return calls;

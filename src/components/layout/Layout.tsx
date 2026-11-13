@@ -11,10 +11,13 @@ import { chain, isLocalFork, isTestnet } from "../../lib/wagmi";
 import { AlertsButton } from "./Alerts";
 import { WalletButton } from "./Wallet";
 import { Onboarding } from "../Onboarding";
+import { LangSwitch } from "../LangSwitch";
+import { t, useT } from "../../i18n";
 
 export function Logo({ className = "" }: { className?: string }) {
+  const { t } = useT();
   return (
-    <Link to="/" className={`flex items-center gap-2.5 ${className}`} aria-label="Qudao home">
+    <Link to="/" className={`flex items-center gap-2.5 ${className}`} aria-label={t("Qudao home")}>
       <img src="/favicon.svg" alt="" className="size-8" />
       <span className="font-display text-xl font-semibold tracking-tight">Qudao</span>
     </Link>
@@ -31,6 +34,7 @@ const navCls = ({ isActive }: { isActive: boolean }) =>
 const READS = new Set(["/", "/whitepaper", "/roadmap"]);
 
 function Header() {
+  const { t } = useT();
   const [open, setOpen] = useState(false);
   const [more, setMore] = useState(false);
   const loc = useLocation();
@@ -50,14 +54,14 @@ function Header() {
               {({ isActive }) => (
                 <>
                   {isActive && <motion.span layoutId="nav-pill" className="absolute inset-0 rounded-lg bg-panel-3" transition={{ type: "spring", bounce: 0.15, duration: 0.5 }} />}
-                  <span className="relative">{n.label}</span>
+                  <span className="relative">{t(n.label)}</span>
                 </>
               )}
             </NavLink>
           ))}
           <div className="relative" onMouseLeave={() => setMore(false)}>
             <button onClick={() => setMore((m) => !m)} onMouseEnter={() => setMore(true)} className="flex items-center gap-1 rounded-lg px-3 py-1.5 text-sm font-medium text-fg-2 hover:text-fg">
-              More <ChevronDown className={`size-3.5 transition-transform duration-300 ${more ? "rotate-180" : ""}`} />
+              {t("More")} <ChevronDown className={`size-3.5 transition-transform duration-300 ${more ? "rotate-180" : ""}`} />
             </button>
             <AnimatePresence>
               {more && (
@@ -70,7 +74,7 @@ function Header() {
                 >
                   {MORE.map((n) => (
                     <NavLink key={n.to} to={n.to} className="block rounded-xl px-3 py-2 text-sm text-fg-2 transition-colors hover:bg-panel-3 hover:text-fg">
-                      {n.label}
+                      {t(n.label)}
                     </NavLink>
                   ))}
                 </motion.div>
@@ -79,11 +83,12 @@ function Header() {
           </div>
         </nav>
         <div className="ml-auto flex items-center gap-2">
-          {isLocalFork && <span className="hidden rounded-lg border border-warn/40 px-2 py-1 text-xs text-warn sm:inline">Local fork</span>}
-          {isTestnet && !isLocalFork && <span className="hidden rounded-lg border border-info/40 px-2 py-1 text-xs text-info sm:inline">Testnet</span>}
+          {isLocalFork && <span className="hidden rounded-lg border border-warn/40 px-2 py-1 text-xs text-warn sm:inline">{t("Local fork")}</span>}
+          {isTestnet && !isLocalFork && <span className="hidden rounded-lg border border-info/40 px-2 py-1 text-xs text-info sm:inline">{t("Testnet")}</span>}
+          <LangSwitch className="hidden sm:flex" />
           <AlertsButton />
           <WalletButton />
-          <button className="grid size-9 place-items-center rounded-xl border border-line-2 lg:hidden" onClick={() => setOpen((o) => !o)} aria-label="Menu">
+          <button className="grid size-9 place-items-center rounded-xl border border-line-2 lg:hidden" onClick={() => setOpen((o) => !o)} aria-label={t("Menu")}>
             <AnimatePresence mode="wait" initial={false}>
               <motion.span key={open ? "x" : "menu"} initial={{ opacity: 0, rotate: -90 }} animate={{ opacity: 1, rotate: 0 }} exit={{ opacity: 0, rotate: 90 }} transition={{ duration: 0.15 }}>
                 {open ? <X className="size-4" /> : <Menu className="size-4" />}
@@ -105,10 +110,13 @@ function Header() {
               {[...NAV, ...MORE].map((n, i) => (
                 <motion.div key={n.to} initial={{ opacity: 0, y: -6 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.03 * i, duration: 0.25 }}>
                   <NavLink to={n.to} className={(s) => `block ${linkCls(s)}`}>
-                    {n.label}
+                    {t(n.label)}
                   </NavLink>
                 </motion.div>
               ))}
+            </div>
+            <div className="px-3 pb-3 sm:hidden">
+              <LangSwitch />
             </div>
           </motion.nav>
         )}
@@ -118,13 +126,14 @@ function Header() {
 }
 
 function Banners() {
+  const { t } = useT();
   const { deployment, protocol, chain: server } = useAppConfig();
   const placeholder = protocol._status?.startsWith("PLACEHOLDER");
   if (server.id !== chain.id)
     return (
       <div className="border-b border-down/30 bg-down/10 text-center text-xs text-fg-2">
         <div className="mx-auto max-w-7xl px-4 py-2">
-          This app is built for {chain.name} but its server runs on {server.name}. Transactions are disabled until they match.
+          {t("This app is built for {chain} but its server runs on {server}. Transactions are disabled until they match.", { chain: chain.name, server: server.name })}
         </div>
       </div>
     );
@@ -132,11 +141,12 @@ function Banners() {
     return (
       <div className="border-b border-info/25 bg-info/[0.07] text-center text-xs text-fg-2">
         <div className="mx-auto max-w-7xl px-4 py-2">
-          Testnet: tokens here have no value. Get test BNB from the{" "}
+          {t("Testnet: tokens here have no value. Get test BNB from the")}{" "}
           <a href="https://www.bnbchain.org/en/testnet-faucet" target="_blank" rel="noreferrer" className="text-info underline">
-            BNB Chain faucet
+            {t("BNB Chain faucet")}
           </a>
-          , then swap it for test USDT or CAKE in <Link to="/markets" className="text-info underline">Markets</Link>. Testnet pool prices don't follow real markets.
+          {t(", then swap it for test USDT or CAKE in")} <Link to="/markets" className="text-info underline">{t("Markets")}</Link>
+          {t(". Testnet pool prices don't follow real markets.")}
         </div>
       </div>
     );
@@ -145,14 +155,15 @@ function Banners() {
     <div className="border-b border-gold/20 bg-gold/[0.06] text-center text-xs text-fg-2">
       <div className="mx-auto max-w-7xl px-4 py-2">
         {!deployment
-          ? "Qudao's contracts aren't live on this network yet: markets, pools and the backtest use live data; deposits open at launch."
-          : "Preview: the fees, rewards and splits shown are placeholder numbers until the final economics are set."}
+          ? t("Qudao's contracts aren't live on this network yet: markets, pools and the backtest use live data; deposits open at launch.")
+          : t("Preview: the fees, rewards and splits shown are placeholder numbers until the final economics are set.")}
       </div>
     </div>
   );
 }
 
 function Footer() {
+  const { t } = useT();
   const community = COMMUNITY.filter((c) => c.href);
   return (
     <footer className="mt-24 border-t border-line bg-ink-2">
@@ -160,7 +171,7 @@ function Footer() {
         <div>
           <Logo />
           <p className="mt-4 max-w-xs text-sm leading-relaxed text-mute">
-            Automated PancakeSwap v3 liquidity on BNB Chain. Your funds stay in a vault only your wallet controls.
+            {t("Automated PancakeSwap v3 liquidity on BNB Chain. Your funds stay in a vault only your wallet controls.")}
           </p>
           {community.length > 0 && (
             <div className="mt-4 flex gap-3 text-sm">
@@ -174,17 +185,17 @@ function Footer() {
         </div>
         {FOOTER.map((col) => (
           <div key={col.title}>
-            <h3 className="label mb-3">{col.title}</h3>
+            <h3 className="label mb-3">{t(col.title)}</h3>
             <ul className="space-y-2 text-sm">
               {col.links.map((l) => (
                 <li key={l.label}>
                   {"to" in l ? (
                     <Link to={l.to} className="text-fg-2 hover:text-gold-2">
-                      {l.label}
+                      {t(l.label)}
                     </Link>
                   ) : (
                     <a href={l.href} target="_blank" rel="noreferrer" className="text-fg-2 hover:text-gold-2">
-                      {l.label}
+                      {t(l.label)}
                     </a>
                   )}
                 </li>
@@ -195,8 +206,7 @@ function Footer() {
       </div>
       <div className="border-t border-line">
         <p className="mx-auto max-w-7xl px-4 py-6 text-xs leading-relaxed text-dim sm:px-6">
-          Providing liquidity carries risk, including loss from price moves (impermanent loss), smart-contract risk and token risk. Nothing here is financial advice. Qudao's contracts are
-          unaudited until an audit report is published here.
+          {t("Providing liquidity carries risk, including loss from price moves (impermanent loss), smart-contract risk and token risk. Nothing here is financial advice. Qudao's contracts are unaudited until an audit report is published here.")}
         </p>
       </div>
     </footer>
@@ -215,7 +225,7 @@ class PageError extends Component<{ children: ReactNode; path: string }, { error
     if (!this.state.error) return this.props.children;
     return (
       <div className="mx-auto max-w-7xl px-4 py-16 sm:px-6">
-        <h1 className="text-2xl font-semibold">This page hit an error</h1>
+        <h1 className="text-2xl font-semibold">{t("This page hit an error")}</h1>
         <p className="mt-3 max-w-xl text-sm text-fg-2">{this.state.error.message}</p>
       </div>
     );
@@ -223,6 +233,7 @@ class PageError extends Component<{ children: ReactNode; path: string }, { error
 }
 
 export function Layout() {
+  useT();
   const loc = useLocation();
   useEffect(() => {
     if (!loc.hash) window.scrollTo({ top: 0 });

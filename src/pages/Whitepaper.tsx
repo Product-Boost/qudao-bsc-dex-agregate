@@ -7,6 +7,7 @@ import { Page } from "../components/layout/Layout";
 import { useAppConfig } from "../lib/config";
 import { short } from "../lib/format";
 import { whitepaper, type Block } from "../data/whitepaper";
+import { useT } from "../i18n";
 
 function mark(text: string, q: string): ReactNode {
   if (!q) return text;
@@ -17,8 +18,9 @@ function mark(text: string, q: string): ReactNode {
 const blockText = (b: Block) => ("p" in b ? b.p : "ul" in b ? b.ul.join(" ") : "contract addresses");
 
 export default function Whitepaper() {
+  const { t, locale } = useT();
   const { protocol, deployment, chain } = useAppConfig();
-  const sections = useMemo(() => whitepaper(protocol), [protocol]);
+  const sections = useMemo(() => whitepaper(protocol), [protocol, locale]);
   const [q, setQ] = useState("");
   const loc = useLocation();
   const term = q.trim().toLowerCase();
@@ -51,15 +53,15 @@ export default function Whitepaper() {
         <aside className="lg:sticky lg:top-24 lg:self-start">
           <label className="flex h-10 items-center gap-2 rounded-xl border border-line bg-panel px-3 focus-within:border-gold/50">
             <Search className="size-4 text-mute" />
-            <input value={q} onChange={(e) => setQ(e.target.value)} placeholder="Search" className="min-w-0 flex-1 bg-transparent text-sm outline-none placeholder:text-dim" />
+            <input value={q} onChange={(e) => setQ(e.target.value)} placeholder={t("Search")} className="min-w-0 flex-1 bg-transparent text-sm outline-none placeholder:text-dim" />
             {q && (
-              <button onClick={() => setQ("")} aria-label="Clear search" className="text-mute hover:text-fg">
+              <button onClick={() => setQ("")} aria-label={t("Clear search")} className="text-mute hover:text-fg">
                 <X className="size-4" />
               </button>
             )}
           </label>
           <nav className="mt-5 hidden lg:block">
-            <div className="label mb-2">Contents</div>
+            <div className="label mb-2">{t("Contents")}</div>
             <ul className="space-y-1 text-sm">
               {sections.map((s) => (
                 <li key={s.id} className={s.level === 2 ? "pl-3" : ""}>
@@ -72,13 +74,19 @@ export default function Whitepaper() {
           </nav>
         </aside>
         <article className="max-w-3xl">
-          <div className="label text-gold">Whitepaper</div>
+          <div className="label text-gold">{t("Whitepaper")}</div>
           <h1 className="mt-2 text-4xl font-semibold">Qudao</h1>
-          <p className="mt-2 text-fg-2">Automated PancakeSwap v3 liquidity on BNB Chain.</p>
+          <p className="mt-2 text-fg-2">{t("Automated PancakeSwap v3 liquidity on BNB Chain.")}</p>
           {protocol._status?.startsWith("PLACEHOLDER") && (
-            <p className="mt-4 rounded-xl border border-gold/30 bg-gold/[0.06] px-4 py-3 text-sm text-fg-2">Draft: the fees, rewards and splits below are placeholders until the final numbers are set.</p>
+            <p className="mt-4 rounded-xl border border-gold/30 bg-gold/[0.06] px-4 py-3 text-sm text-fg-2">{t("Draft: the fees, rewards and splits below are placeholders until the final numbers are set.")}</p>
           )}
-          {term && <p className="mt-6 text-sm text-mute">{shown.length ? `${shown.length} section${shown.length > 1 ? "s" : ""} mention “${q}”.` : `Nothing mentions “${q}”.`}</p>}
+          {term && (
+            <p className="mt-6 text-sm text-mute">
+              {shown.length
+                ? t(shown.length > 1 ? "{n} sections mention “{q}”." : "{n} section mentions “{q}”.", { n: shown.length, q })
+                : t("Nothing mentions “{q}”.", { q })}
+            </p>
+          )}
           <div className="mt-8 space-y-10">
             {shown.map((s) => (
               <section key={s.id} id={s.id} className="scroll-mt-24">
@@ -100,7 +108,7 @@ export default function Whitepaper() {
                       <div key={i} className="divide-y divide-line/70 rounded-2xl border border-line bg-panel">
                         {contracts.map(([label, a]) => (
                           <div key={label} className="flex items-center justify-between gap-4 px-4 py-2.5 text-sm">
-                            <span>{label}</span>
+                            <span>{t(label)}</span>
                             <a href={`${chain.explorer}/address/${a}`} target="_blank" rel="noreferrer" className="font-mono text-xs text-fg hover:text-gold-2">
                               {short(a, 6)}
                             </a>
@@ -108,7 +116,7 @@ export default function Whitepaper() {
                         ))}
                       </div>
                     ) : (
-                      <p key={i} className="text-mute">The addresses are published here at launch.</p>
+                      <p key={i} className="text-mute">{t("The addresses are published here at launch.")}</p>
                     ),
                   )}
                 </div>

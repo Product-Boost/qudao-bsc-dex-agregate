@@ -9,6 +9,7 @@ import { bps } from "../../lib/format";
 import { EASE } from "../../lib/ease";
 import { Burn, FeesCake, KeptInRange, PickPool, SetRange, Well } from "./scenes";
 import { headAt, movesAt } from "./data";
+import { useT } from "../../i18n";
 
 type Tone = "gold" | "info" | "up" | "fire";
 interface Step {
@@ -64,53 +65,54 @@ function Counter({ label, short, value, className = "" }: { label: string; short
 }
 
 export function HowItWorks() {
+  const { t } = useT();
   const { protocol: p } = useAppConfig();
   const r = p.revenue.bnbSplitBps;
   const steps: Step[] = [
     {
-      kicker: "Pick a pool",
-      title: "Any PancakeSwap pair",
-      body: "BNB, stablecoins, memecoins, Stock Tokens or any token address. If the pool doesn't exist yet, Qudao creates it in the same transaction.",
-      status: "Choosing a pool",
+      kicker: t("Pick a pool"),
+      title: t("Any PancakeSwap pair"),
+      body: t("BNB, stablecoins, memecoins, Stock Tokens or any token address. If the pool doesn't exist yet, Qudao creates it in the same transaction."),
+      status: t("Choosing a pool"),
       tone: "gold",
     },
     {
-      kicker: "Set your range",
-      title: "Your range, your rule",
-      body: "Drag the range over the pool's real liquidity, see what it would have earned in the last 30 days, and choose what happens when the price moves.",
-      status: "Setting the range",
+      kicker: t("Set your range"),
+      title: t("Your range, your rule"),
+      body: t("Drag the range over the pool's real liquidity, see what it would have earned in the last 30 days, and choose what happens when the price moves."),
+      status: t("Setting the range"),
       tone: "info",
     },
     {
-      kicker: "Kept in range",
-      title: "It moves when the price moves",
-      body: "A position only earns while the price is inside its range. When the price leaves, Qudao checks it against Chainlink and moves the range back around it.",
-      status: "Kept in range",
+      kicker: t("Kept in range"),
+      title: t("It moves when the price moves"),
+      body: t("A position only earns while the price is inside its range. When the price leaves, Qudao checks it against Chainlink and moves the range back around it."),
+      status: t("Kept in range"),
       tone: "up",
-      link: { to: "/liquidity", label: "Find a pool" },
+      link: { to: "/liquidity", label: t("Find a pool") },
     },
     {
-      kicker: "Fees and CAKE",
-      title: "Reinvested, or yours to claim",
-      body: `Fees go back into the position once they're worth it; the rest waits for you, or comes as BNB. Farm pools earn CAKE on top. Qudao's fee: ${bps(p.fees.protocolFeeBps)} of what you earn.`,
-      status: "Earning",
+      kicker: t("Fees and CAKE"),
+      title: t("Reinvested, or yours to claim"),
+      body: t("Fees go back into the position once they're worth it; the rest waits for you, or comes as BNB. Farm pools earn CAKE on top. Qudao's fee: {fee} of what you earn.", { fee: bps(p.fees.protocolFeeBps) }),
+      status: t("Earning"),
       tone: "gold",
     },
     {
-      kicker: "The Well",
-      title: "Stake QDAO, pay less",
-      body: `No lock. Stakers earn ${bps(r.well)} of revenue in BNB, streamed every second, and pay up to ${bps(p.staking.discountBps[3][3])} less fee with up to ${(p.staking.boostBps[3][3] / 10_000).toFixed(0)}× the rewards.`,
-      status: "Staked",
+      kicker: t("The Well"),
+      title: t("Stake QDAO, pay less"),
+      body: t("No lock. Stakers earn {share} of revenue in BNB, streamed every second, and pay up to {off} less fee with up to {boost}× the rewards.", { share: bps(r.well), off: bps(p.staking.discountBps[3][3]), boost: (p.staking.boostBps[3][3] / 10_000).toFixed(0) }),
+      status: t("Staked"),
       tone: "info",
-      link: { to: "/staking", label: "Go to The Well" },
+      link: { to: "/staking", label: t("Go to The Well") },
     },
     {
-      kicker: "Buyback & burn",
-      title: "Revenue in, supply down",
-      body: `${bps(r.buyback)} of revenue buys QDAO back and burns it: first on the flap.sh curve, then on PancakeSwap. Every burn is public.`,
-      status: "Burning",
+      kicker: t("Buyback & burn"),
+      title: t("Revenue in, supply down"),
+      body: t("{share} of revenue buys QDAO back and burns it: first on the flap.sh curve, then on PancakeSwap. Every burn is public.", { share: bps(r.buyback) }),
+      status: t("Burning"),
       tone: "fire",
-      link: { to: "/token", label: "See the numbers" },
+      link: { to: "/token", label: t("See the numbers") },
     },
   ];
   const n = steps.length;
@@ -146,20 +148,20 @@ export function HowItWorks() {
     (pr) => <PickPool progress={pr} />,
     (pr) => <SetRange progress={pr} />,
     (pr) => <KeptInRange progress={pr} />,
-    (pr) => <FeesCake progress={pr} feeText={`Qudao's fee: ${bps(p.fees.protocolFeeBps)} of fees, never your deposit`} />,
+    (pr) => <FeesCake progress={pr} feeText={t("Qudao's fee: {fee} of fees, never your deposit", { fee: bps(p.fees.protocolFeeBps) })} />,
     (pr) => <Well progress={pr} />,
     (pr) => <Burn progress={pr} split={r} />,
   ];
   const s = steps[active];
 
   return (
-    <section ref={ref} id="how" aria-label="How Qudao works" className="relative" style={{ height: `${n * 75 + 100}vh` }}>
+    <section ref={ref} id="how" aria-label={t("How Qudao works")} className="relative" style={{ height: `${n * 75 + 100}vh` }}>
       <div className="sticky top-16 flex h-[calc(100dvh-4rem)] items-center overflow-hidden">
         <div className="mx-auto grid w-full max-w-7xl grid-cols-[minmax(0,1fr)] gap-6 px-4 sm:px-6 lg:grid-cols-[minmax(300px,380px)_minmax(0,1fr)] lg:gap-14">
           {/* steps: a vertical rail on desktop, chips on small screens */}
           <div className="flex min-w-0 flex-col justify-center">
-            <div className="label text-gold">How it works</div>
-            <h2 className="mt-2 hidden text-3xl font-semibold lg:block">From deposit to burn, on autopilot.</h2>
+            <div className="label text-gold">{t("How it works")}</div>
+            <h2 className="mt-2 hidden text-3xl font-semibold lg:block">{t("From deposit to burn, on autopilot.")}</h2>
             <ol ref={chips} className="scrollbar-none mt-4 flex gap-2 overflow-x-auto lg:hidden">
               {steps.map((st, i) => (
                 <li key={st.kicker} className="shrink-0" data-step={i}>
@@ -227,8 +229,8 @@ export function HowItWorks() {
               <div className="relative flex items-center justify-between gap-3 border-b border-line/80 px-4 py-3 sm:px-5">
                 <div className="flex items-center gap-2 text-sm">
                   <Lock className="size-4 text-gold" />
-                  <span className="font-semibold">Your vault</span>
-                  <span className="hidden text-mute sm:inline">· BNB / USDT · PancakeSwap v3</span>
+                  <span className="font-semibold">{t("Your vault")}</span>
+                  <span className="hidden text-mute sm:inline">{t("· BNB / USDT · PancakeSwap v3")}</span>
                 </div>
                 <AnimatePresence mode="wait" initial={false}>
                   <motion.span
@@ -254,10 +256,10 @@ export function HowItWorks() {
                 </AnimatePresence>
               </div>
               <div className="relative grid grid-cols-4 gap-3 border-t border-line/80 px-4 py-3 sm:px-5">
-                <Counter label="Fees earned" short="Fees" value={fees} className="text-up" />
-                <Counter label="Range moved" short="Moves" value={moves} />
-                <Counter label="CAKE farmed" short="CAKE" value={cake} className="text-gold-2" />
-                <Counter label="QDAO burned" short="Burned" value={burned} className="text-[#ff7a45]" />
+                <Counter label={t("Fees earned")} short={t("Fees")} value={fees} className="text-up" />
+                <Counter label={t("Range moved")} short={t("Moves")} value={moves} />
+                <Counter label={t("CAKE farmed")} short="CAKE" value={cake} className="text-gold-2" />
+                <Counter label={t("QDAO burned")} short={t("Burned")} value={burned} className="text-[#ff7a45]" />
               </div>
             </div>
             {/* the active step's words under the panel on small screens */}
