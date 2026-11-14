@@ -6,7 +6,7 @@
       "destination": "https://qudao.172.86.127.236.sslip.io/api/:path*"
     },
     {
-      "source": "/(.*)",
+      "source": "/((?!assets/|icons/|favicon.svg).*)",
       "destination": "/index.html"
     }
   ]
