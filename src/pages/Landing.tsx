@@ -166,12 +166,12 @@ export default function Landing() {
       <section className="border-b border-line/60 bg-ink-2">
         <Stagger className="mx-auto grid max-w-7xl grid-cols-2 gap-6 px-4 py-9 sm:px-6 md:grid-cols-4">
           {[
-            { label: t("Best est. APR right now"), node: best ? <CountUp value={best.estAprPct ?? 0} format={(n) => pct(n)} /> : "—", sub: best ? t("{pair}, ±5% range", { pair: `${best.token0.symbol}/${best.token1.symbol}` }) : t("pools loading") },
-            { label: t("Managed by Qudao"), node: <CountUp value={stats.data?.managed?.tvlUsd ?? 0} format={(n) => usd(n, { compact: true })} />, sub: t("{n} positions", { n: stats.data?.managed?.positions ?? 0 }) },
-            { label: t("Ranges moved"), node: <CountUp value={stats.data?.managed?.moves30d ?? 0} format={(n) => Math.round(n).toString()} />, sub: t("last 30 days") },
-            { label: t("Qudao's fee"), node: bps(protocol.fees.protocolFeeBps), sub: t("of what you earn, never your deposit") },
+            { id: "apr", label: t("Best est. APR right now"), node: best ? <CountUp value={best.estAprPct ?? 0} format={(n) => pct(n)} /> : "—", sub: best ? t("{pair}, ±5% range", { pair: `${best.token0.symbol}/${best.token1.symbol}` }) : t("pools loading") },
+            { id: "managed", label: t("Managed by Qudao"), node: <CountUp value={stats.data?.managed?.tvlUsd ?? 0} format={(n) => usd(n, { compact: true })} />, sub: t("{n} positions", { n: stats.data?.managed?.positions ?? 0 }) },
+            { id: "moved", label: t("Ranges moved"), node: <CountUp value={stats.data?.managed?.moves30d ?? 0} format={(n) => Math.round(n).toString()} />, sub: t("last 30 days") },
+            { id: "fee", label: t("Qudao's fee"), node: bps(protocol.fees.protocolFeeBps), sub: t("of what you earn, never your deposit") },
           ].map((s) => (
-            <StaggerItem key={s.label}>
+            <StaggerItem key={s.id}>
               <div className="label">{s.label}</div>
               <div className="num mt-1.5 text-3xl font-semibold">{s.node}</div>
               <div className="mt-0.5 text-xs text-mute">{s.sub}</div>
