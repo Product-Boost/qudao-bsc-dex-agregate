@@ -1,5 +1,5 @@
 // New position: pick a pair and fee tier (or create the pool), set the range and rule, see the last 30 days,
-// deposit one token or both, then one signature + one transaction (or one confirmation on batching wallets).
+// deposit one token or both. Each ERC-20 is approved to the factory before the position is opened.
 import { useState } from "react";
 import { useQueries, useQuery } from "@tanstack/react-query";
 import { useNavigate, useSearchParams } from "react-router-dom";
@@ -301,11 +301,14 @@ export default function NewPosition() {
       const native0 = wbnbSide === 0 && payNative && a0 > 0n;
       const native1 = wbnbSide === 1 && payNative && a1 > 0n;
       const value = native0 ? a0 : native1 ? a1 : 0n;
+      const symbolFor = (side: 0 | 1, token: Token) => (wbnbSide === side && !payNative ? "WBNB" : token.symbol);
       const erc = [
-        { token: t0, amount: native0 ? 0n : a0, symbol: tok0.symbol },
-        { token: t1, amount: native1 ? 0n : a1, symbol: tok1.symbol },
+        { token: t0, amount: native0 ? 0n : a0, symbol: symbolFor(0, tok0) },
+        { token: t1, amount: native1 ? 0n : a1, symbol: symbolFor(1, tok1) },
       ].filter((x) => x.amount > 0n);
-      const min = (x: bigint) => (x * BigInt(10_000 - slippageBps)) / 10_000n;
+      // PancakeSwap requires the amounts actually used to clear these minimums. One side of a range
+      // is often only partly used (especially after a one-token swap), and the vault refunds the rest.
+      // A minimum near the full deposit makes that refund path revert with "Price slippage check".
       const startSqrt = creating ? sqrtPriceX96(view!.inverted ? 1 / Number(startPrice) : Number(startPrice), tok0.decimals, tok1.decimals) : 0n;
       const p = {
         token0: t0,
@@ -315,8 +318,8 @@ export default function NewPosition() {
         tickUpper: range.upper,
         amount0: a0,
         amount1: a1,
-        amount0Min: min(a0),
-        amount1Min: min(a1),
+        amount0Min: 0n,
+        amount1Min: 0n,
         createPoolSqrtPriceX96: startSqrt,
         settings: { strategy: strategyIndex(strategy), waitForMarket: isStock && waitForMarket, autoCompound, reinvestBps: reinvest * 100, slippageBps },
         referralCode: refValid && firstTime && alreadyReferred === zeroAddress ? refCode! : ("0x0000000000000000" as Hex),

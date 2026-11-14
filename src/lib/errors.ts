@@ -50,6 +50,13 @@ export function friendlyError(e: unknown): { message: string; cancelled: boolean
     if (e.walk((x) => x instanceof UserRejectedRequestError)) return { message: t("You cancelled in your wallet."), cancelled: true };
     const revert = e.walk((x) => x instanceof ContractFunctionRevertedError) as ContractFunctionRevertedError | null;
     const name = revert?.data?.errorName;
+    const reason = Array.isArray(revert?.data?.args) ? revert.data.args[0] : undefined;
+    if (name === "Error" && typeof reason === "string") {
+      if (reason === "Price slippage check") {
+        return { message: t("The deposit didn't match the range at the current price. Try again — anything that doesn't fit is returned."), cancelled: false };
+      }
+      return { message: reason, cancelled: false };
+    }
     if (name && CONTRACT[name]) return { message: t(CONTRACT[name]), cancelled: false };
     if (name) return { message: t("The contract refused: {name}.", { name }), cancelled: false };
     if (/insufficient funds/i.test(e.message)) return { message: t("Not enough BNB to pay for this and its network fee."), cancelled: false };

@@ -51,7 +51,20 @@ export async function signPermitBatch(
   return { permit, signature };
 }
 
-/** Approval calls still needed before `spender` can pull these amounts (exact amounts, or max for Permit2). */
+/** Binance-peg USDT reverts if a non-zero allowance is changed to another non-zero amount. */
+const BSC_USDT = "0x55d398326f99059ff775485246999027b3197955";
+
+function approveCall(token: Address, spender: Address, amount: bigint, symbol: string): Call {
+  return {
+    address: token,
+    abi: erc20Abi,
+    functionName: "approve",
+    args: [spender, amount],
+    label: tr("Approve {symbol}", { symbol }),
+  };
+}
+
+/** Approval calls still needed before `spender` can pull these amounts (exact amounts, or max when requested). */
 export async function approvalsNeeded(
   config: Config,
   owner: Address,
@@ -60,17 +73,13 @@ export async function approvalsNeeded(
   infinite = false,
 ): Promise<Call[]> {
   const calls: Call[] = [];
-  for (const t of tokens) {
-    if (t.amount === 0n) continue;
-    const allowance = await readContract(config, { address: t.token, abi: erc20Abi, functionName: "allowance", args: [owner, spender] });
-    if (allowance >= t.amount) continue;
-    calls.push({
-      address: t.token,
-      abi: erc20Abi,
-      functionName: "approve",
-      args: [spender, infinite ? maxUint256 : t.amount],
-      label: tr("Approve {symbol}", { symbol: t.symbol }),
-    });
+  for (const token of tokens) {
+    if (token.amount === 0n) continue;
+    const allowance = await readContract(config, { address: token.token, abi: erc20Abi, functionName: "allowance", args: [owner, spender] });
+    const need = infinite ? maxUint256 : token.amount;
+    if (allowance >= need) continue;
+    if (token.token.toLowerCase() === BSC_USDT && allowance !== 0n) calls.push(approveCall(token.token, spender, 0n, token.symbol));
+    calls.push(approveCall(token.token, spender, need, token.symbol));
   }
   return calls;
 }
