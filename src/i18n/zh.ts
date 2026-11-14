@@ -55,6 +55,7 @@ export const zh: Record<string, string> = {
 
   // landing
   "Built on PancakeSwap v3 · BNB Chain": "基于 PancakeSwap v3 · BNB Chain",
+  "CA: {address} · BNB Chain.": "CA: {address} · BNB Chain.",
   "Your liquidity,": "你的流动性，",
   "always in range.": "始终在区间内。",
   "PancakeSwap pays you a share of every trade, but only while the price is inside your range. Qudao keeps it there, day and night, and reinvests what you earn. You just watch it grow. BNB, stablecoins, Stock Tokens and memecoins, straight from your own wallet.":

@@ -1,9 +1,9 @@
 // Landing page.
-import { useEffect, useRef, type MouseEvent } from "react";
+import { useEffect, useRef, useState, type MouseEvent } from "react";
 import { useQuery } from "@tanstack/react-query";
 import { Link, useLocation } from "react-router-dom";
 import { motion, useMotionValue, useReducedMotion, useSpring, useTransform } from "motion/react";
-import { ArrowDown, ArrowRight, Check, Eye, KeyRound, Lock, PauseCircle, ScanSearch, ShieldCheck, Timer, X } from "lucide-react";
+import { ArrowDown, ArrowRight, Check, Copy, Eye, KeyRound, Lock, PauseCircle, ScanSearch, ShieldCheck, Timer, X } from "lucide-react";
 import { ButtonLink, Card } from "../components/ui";
 import { TokenIcon } from "../components/TokenIcon";
 import { CountUp, Marquee, Reveal, Spotlight, Stagger, StaggerItem, WordsReveal } from "../components/motion";
@@ -71,8 +71,10 @@ const SAFETY = [
 export default function Landing() {
   const { t } = useT();
   const { protocol } = useAppConfig();
+  const [copied, setCopied] = useState(false);
   const pools = useQuery({ queryKey: ["pools"], queryFn: api.pools });
   const stats = useQuery({ queryKey: ["protocol"], queryFn: api.protocol });
+  const ca = stats.data?.token?.address;
   const best = (pools.data?.pools ?? []).filter((p) => p.estAprPct !== null && p.group === "popular").sort((a, b) => (b.estAprPct ?? 0) - (a.estAprPct ?? 0))[0];
   const split = protocol.revenue.bnbSplitBps;
   const toHow = () => document.getElementById("how")?.scrollIntoView({ behavior: "smooth" });
@@ -91,18 +93,40 @@ export default function Landing() {
         <div className="animate-drift pointer-events-none absolute -bottom-64 left-[-10%] size-[520px] rounded-full bg-gold-3/10 blur-[120px] [animation-delay:-8s]" />
         <div className="relative mx-auto grid max-w-7xl items-center gap-12 px-4 py-20 sm:px-6 lg:grid-cols-[1.05fr_1fr] lg:py-28">
           <div>
-            <motion.span
+            <motion.div
               initial={{ opacity: 0, y: 12 }}
               animate={{ opacity: 1, y: 0 }}
               transition={{ duration: 0.6, ease: EASE }}
-              className="inline-flex items-center gap-2 rounded-full border border-gold/30 bg-gold/[0.07] px-3 py-1 text-xs font-medium text-gold-2"
+              className="flex flex-wrap items-center gap-2"
             >
-              <span className="relative flex size-1.5">
-                <span className="absolute inline-flex size-full animate-ping rounded-full bg-gold opacity-70" />
-                <span className="relative inline-flex size-1.5 rounded-full bg-gold" />
+              <span className="inline-flex max-w-full items-center gap-2 rounded-full border border-gold/30 bg-gold/[0.07] px-3 py-1 text-xs font-medium text-gold-2">
+                <span className="relative flex size-1.5 shrink-0">
+                  <span className="absolute inline-flex size-full animate-ping rounded-full bg-gold opacity-70" />
+                  <span className="relative inline-flex size-1.5 rounded-full bg-gold" />
+                </span>
+                {ca ? (
+                  <a href={`https://gmgn.ai/bsc/token/${ca}`} target="_blank" rel="noreferrer" className="min-w-0 font-mono break-all hover:text-gold">
+                    {t("CA: {address} · BNB Chain.", { address: ca })}
+                  </a>
+                ) : (
+                  t("Built on PancakeSwap v3 · BNB Chain")
+                )}
+                {ca && (
+                  <button
+                    type="button"
+                    aria-label={t("Copy address")}
+                    onClick={() => {
+                      void navigator.clipboard.writeText(ca);
+                      setCopied(true);
+                      setTimeout(() => setCopied(false), 1500);
+                    }}
+                    className="shrink-0 text-gold hover:text-gold-2"
+                  >
+                    {copied ? <Check className="size-3.5 text-up" /> : <Copy className="size-3.5" />}
+                  </button>
+                )}
               </span>
-              {t("Built on PancakeSwap v3 · BNB Chain")}
-            </motion.span>
+            </motion.div>
             <h1 className="mt-6 text-5xl leading-[1.05] font-semibold sm:text-6xl">
               <WordsReveal text={t("Your liquidity,")} delay={0.1} />
               <br />

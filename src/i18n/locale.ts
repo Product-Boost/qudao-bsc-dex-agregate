@@ -10,8 +10,7 @@ function detect(): Locale {
   } catch {
     /* private mode */
   }
-  if (typeof navigator !== "undefined" && /^zh/i.test(navigator.language)) return "zh";
-  return "en";
+  return "zh";
 }
 
 let locale: Locale = detect();
