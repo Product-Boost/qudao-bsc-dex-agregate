@@ -18,7 +18,7 @@ export const MORE = [
 /** Fill in before launch; empty ones aren't shown. */
 export const COMMUNITY: { label: string; href: string }[] = [
   { label: "X", href: "https://x.com/Qudaopath" },
-  { label: "Telegram", href: "https://t.me/qudaopath" },
+  { label: "Telegram", href: "https://t.me/qudaoorg" },
   { label: "GitHub", href: "" },
 ];
 
